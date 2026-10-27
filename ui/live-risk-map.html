@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Risk Map — TerraWatch NER</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Design System Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="overflow-hidden">
+
+    <!-- =========================================================
+         ACADEMIC NOTICE BANNER
+    ========================================================== -->
+    <div class="ls-academic-banner">
+        <div>
+            <i class="bi bi-mortarboard me-1"></i>
+            <strong>Academic AI Prototype</strong> &bull; 32 geographically grounded monitoring locations across 8 NER States &bull; Simulated or heuristic academic baselines
+        </div>
+        <div class="d-none d-md-block">
+            Dual ML Models (LightGBM + XGBoost) &bull; <a href="safety-guide.html">Safety SOPs</a> &bull; <a href="admin.html#models">Architecture</a>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         GLOBAL NAVIGATION HEADER
+    ========================================================== -->
+    <header class="ls-navbar">
+        <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center">
+            <!-- Brand -->
+            <a href="index.html" class="ls-navbar-brand">
+                <div class="shield-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                    <div class="brand-title">TerraWatch NER</div>
+                    <div class="brand-subtitle">NE Region AI Risk Monitor</div>
+                </div>
+            </a>
+
+            <!-- Primary Navigation Links -->
+            <nav class="d-none d-lg-block">
+                <ul class="ls-nav-links">
+                    <li><a href="index.html" class="ls-nav-link"><i class="bi bi-grid-fill me-1"></i> Overview</a></li>
+                    <li><a href="live-risk-map.html" class="ls-nav-link active"><i class="bi bi-map-fill me-1"></i> Live Map</a></li>
+                    <li><a href="probability-risk.html" class="ls-nav-link"><i class="bi bi-cpu-fill me-1"></i> Risk Analysis</a></li>
+                    <li><a href="report-issue.html" class="ls-nav-link"><i class="bi bi-flag-fill me-1"></i> Reports</a></li>
+                    <li><a href="admin.html" class="ls-nav-link"><i class="bi bi-gear-fill me-1"></i> System</a></li>
+                </ul>
+            </nav>
+
+            <!-- Actions / Status -->
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-light d-none d-sm-inline-flex" data-bs-toggle="modal" data-bs-target="#evacModal">
+                    <i class="bi bi-house-check me-1"></i> Emergency Shelters
+                </button>
+                <button type="button" class="ls-sos-btn" data-bs-toggle="modal" data-bs-target="#sosModal">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> SOS
+                </button>
+                <!-- Mobile Hamburger Toggle -->
+                <button class="btn btn-outline-light d-lg-none p-1 px-2 ms-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Offcanvas Menu -->
+    <div class="offcanvas offcanvas-end bg-dark text-white" tabindex="-1" id="mobileMenu">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h5 class="offcanvas-title fw-bold"><i class="bi bi-shield-check text-success me-2"></i> TerraWatch NER</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-4">
+            <div class="mb-3">
+                <small class="text-secondary text-uppercase fw-semibold">Navigation</small>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <a href="index.html" class="btn btn-outline-light text-start"><i class="bi bi-grid-fill me-2"></i> Overview</a>
+                <a href="live-risk-map.html" class="btn btn-primary text-start"><i class="bi bi-map-fill me-2"></i> Live Map</a>
+                <a href="probability-risk.html" class="btn btn-outline-light text-start"><i class="bi bi-cpu-fill me-2"></i> Risk Analysis</a>
+                <a href="report-issue.html" class="btn btn-outline-light text-start"><i class="bi bi-flag-fill me-2"></i> Reports</a>
+                <a href="admin.html" class="btn btn-outline-light text-start"><i class="bi bi-gear-fill me-2"></i> System Operations</a>
+                <a href="safety-guide.html" class="btn btn-outline-light text-start"><i class="bi bi-book me-2"></i> Safety Guide</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         FULL GEOSPATIAL MAP VIEWPORT
+    ========================================================== -->
+    <main class="map-viewport-wrapper">
+
+        <!-- FLOATING TOP CONTROLS BAR -->
+        <div class="ls-map-floating-bar" id="mapFloatingBar">
+            <!-- Left Controls Column (Organized into Two Distinct Semantic Rows) -->
+            <div class="ls-map-controls-column d-flex flex-column gap-2">
+                
+                <!-- ROW 1: PRIMARY LOCATION & MONITORING -->
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- 1. Search with Autocomplete -->
+                    <div class="ls-map-control-group search-control-group position-relative">
+                        <div class="input-group input-group-sm" style="width: 230px;">
+                            <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" id="locationSearch" class="form-control border-0 ps-0" placeholder="Search station, city, district..." autocomplete="off">
+                            <button id="searchClearBtn" class="btn btn-sm btn-link text-muted p-0 pe-2 d-none" type="button" title="Clear search"><i class="bi bi-x-circle-fill"></i></button>
+                            <button id="searchButton" class="btn btn-sm btn-primary rounded-end px-2" type="button">Go</button>
+                        </div>
+                        <!-- Autocomplete dropdown suggestions -->
+                        <div id="searchSuggestions" class="search-suggestions-menu d-none"></div>
+                        <!-- Inline status message (NO native alert) -->
+                        <div id="searchFeedback" class="search-feedback-msg d-none"></div>
+                    </div>
+
+                    <!-- 2. State Filter -->
+                    <div class="ls-map-control-group">
+                        <label for="stateFilterSelect" class="visually-hidden">Filter by State</label>
+                        <i class="bi bi-geo-alt-fill text-muted small"></i>
+                        <select id="stateFilterSelect" class="form-select form-select-sm border-0 py-0 fw-semibold" style="width: 145px; cursor: pointer;">
+                            <option value="ALL">All 8 NER States</option>
+                            <option value="Assam">Assam</option>
+                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                            <option value="Manipur">Manipur</option>
+                            <option value="Meghalaya">Meghalaya</option>
+                            <option value="Mizoram">Mizoram</option>
+                            <option value="Nagaland">Nagaland</option>
+                            <option value="Sikkim">Sikkim</option>
+                            <option value="Tripura">Tripura</option>
+                        </select>
+                    </div>
+
+                    <!-- 3. Monitoring Toggle -->
+                    <div class="ls-map-control-group">
+                        <button id="riskToggle" class="ls-layer-btn active" type="button" title="Toggle Monitoring Stations">
+                            <i class="bi bi-check-square-fill layer-check-icon"></i>
+                            <span class="sensor-glyph-dot me-1"></span>
+                            <span>Monitoring Stations (<span id="totalStationCount">32</span>)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ROW 2: EMERGENCY RESOURCES & MAP ACTIONS -->
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- Emergency Resources Toggles -->
+                    <div class="ls-map-control-group d-flex align-items-center gap-1">
+                        <span class="ctrl-group-label me-1">RESOURCES:</span>
+                        <button id="shelterToggle" class="ls-layer-btn active" type="button" title="Toggle Emergency Shelters">
+                            <i class="bi bi-check-square-fill layer-check-icon"></i>
+                            <i class="bi bi-shield-shaded me-1"></i>
+                            <span>Emergency Shelters (<span id="shelterCount">4</span>)</span>
+                        </button>
+                        <button id="rescueToggle" class="ls-layer-btn active" type="button" title="Toggle Rescue Points">
+                            <i class="bi bi-check-square-fill layer-check-icon"></i>
+                            <i class="bi bi-life-preserver me-1"></i>
+                            <span>Rescue Points (<span id="rescueCount">3</span>)</span>
+                        </button>
+                        <button id="eocToggle" class="ls-layer-btn active" type="button" title="Toggle Emergency Operations Centres">
+                            <i class="bi bi-check-square-fill layer-check-icon"></i>
+                            <i class="bi bi-building-check me-1"></i>
+                            <span>Operations Centres (<span id="eocCount">7</span>)</span>
+                        </button>
+                    </div>
+
+                    <!-- Map Actions -->
+                    <div class="ls-map-control-group d-flex align-items-center gap-1">
+                        <button id="resetViewButton" class="btn btn-sm btn-outline-secondary py-1 px-2 fw-medium" type="button" title="Reset view to North East India boundary">
+                            <i class="bi bi-arrows-fullscreen me-1"></i> Reset View
+                        </button>
+                        <button id="locationButton" class="btn btn-sm btn-outline-dark py-1 px-2 fw-medium" type="button" title="Detect GPS coordinates">
+                            <i class="bi bi-crosshair me-1"></i> Locate Me
+                        </button>
+                        <button id="legendToggleBtn" class="btn btn-sm btn-outline-secondary py-1 px-2 fw-medium d-xl-none" type="button" title="Toggle Map Legend">
+                            <i class="bi bi-info-circle me-1"></i> Legend
+                        </button>
+                        <span id="currentLocation" class="d-none"></span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Group: Structured Vertical Map Legend Card -->
+            <div class="ls-map-legend-card" id="mapLegendCard">
+                <div class="legend-header d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                    <span class="legend-title"><i class="bi bi-map-fill text-secondary me-1"></i> MAP LEGEND</span>
+                    <button type="button" class="btn-close btn-close-sm d-xl-none" id="closeLegendBtn" aria-label="Close"></button>
+                </div>
+
+                <!-- 1. Risk Level (Monitoring Stations) -->
+                <div class="legend-group mb-2">
+                    <div class="legend-group-title">RISK LEVEL <span class="text-muted fw-normal" style="font-size: 0.65rem;">(Monitoring Stations)</span></div>
+                    <div class="legend-rows">
+                        <div class="legend-row-item"><span class="legend-dot dot-low"></span> <span>Low</span></div>
+                        <div class="legend-row-item"><span class="legend-dot dot-mod"></span> <span>Moderate</span></div>
+                        <div class="legend-row-item"><span class="legend-dot dot-high"></span> <span>High</span></div>
+                        <div class="legend-row-item"><span class="legend-dot dot-crit"></span> <span>Critical</span></div>
+                    </div>
+                </div>
+
+                <!-- 2. Monitoring -->
+                <div class="legend-group mb-2 pt-2 border-top">
+                    <div class="legend-group-title">MONITORING</div>
+                    <div class="legend-row-item">
+                        <span class="legend-symbol symbol-station"></span>
+                        <span>Monitoring Station (Sensor)</span>
+                    </div>
+                </div>
+
+                <!-- 3. Emergency Resources -->
+                <div class="legend-group mb-2 pt-2 border-top">
+                    <div class="legend-group-title">EMERGENCY RESOURCES</div>
+                    <div class="legend-row-item mb-1">
+                        <span class="legend-symbol symbol-shelter"></span>
+                        <span>Emergency Shelter</span>
+                    </div>
+                    <div class="legend-row-item mb-1">
+                        <span class="legend-symbol symbol-rescue"></span>
+                        <span>Rescue Point</span>
+                    </div>
+                    <div class="legend-row-item">
+                        <span class="legend-symbol symbol-eoc"></span>
+                        <span>Emergency Operations Centre</span>
+                    </div>
+                </div>
+
+                <!-- 4. Location -->
+                <div class="legend-group pt-2 border-top" id="legendUserGroup">
+                    <div class="legend-group-title">LOCATION</div>
+                    <div class="legend-row-item">
+                        <span class="legend-symbol symbol-user"></span>
+                        <span>Your Location</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEAFLET MAP ELEMENT -->
+        <div id="riskMap"></div>
+
+        <!-- SLIDE-OUT STATION INSPECTOR (DESKTOP RIGHT / MOBILE BOTTOM-SHEET) -->
+        <div class="ls-station-drawer" id="stationDrawer">
+            <!-- Mobile Grab Handle -->
+            <div class="mobile-drawer-handle d-md-none" id="drawerMobileHandle">
+                <span class="handle-bar"></span>
+            </div>
+            <!-- Dynamic Drawer Container -->
+            <div id="selectedLocation" class="p-0">
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-broadcast fs-2 text-primary mb-2 d-block"></i>
+                    <h6 class="fw-bold text-dark">Select a Monitoring Station</h6>
+                    <p class="small text-secondary mb-0">Click any monitoring station marker to inspect live geotechnical telemetry, risk contributors, and AI inference.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- =========================================================
+         EVACUATION & RELIEF SHELTERS MODAL
+    ========================================================== -->
+    <div class="modal fade" id="evacModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-house-check-fill me-2"></i> Verified Emergency Relief Shelters</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-secondary mb-3">
+                        Designated relief centres maintained by State Disaster Management Authorities (SDMA) across the North Eastern Region:
+                    </p>
+                    <!-- Shelter Cards Grid -->
+                    <div class="row g-3 mb-4" id="shelterCards"></div>
+
+                    <!-- Shelter Location Focus (Academic Prototype Preview) -->
+                    <div class="card border p-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0"><i class="bi bi-compass me-1 text-primary"></i> Focus Shelter on Map</h6>
+                            <span class="badge bg-secondary">Demo Preview</span>
+                        </div>
+                        <p class="small text-muted mb-2">
+                            Select a shelter destination below to center and highlight its location on the live map. (Automated hazard routing is an academic simulation preview; follow official district administration directives during emergency alerts).
+                        </p>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-8">
+                                <select id="shelterSelect" class="form-select form-select-sm">
+                                    <option value="">Select Destination Shelter</option>
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <button id="routeButton" class="btn btn-sm btn-primary w-100" type="button">
+                                    <i class="bi bi-geo-alt me-1"></i> Focus Shelter
+                                </button>
+                            </div>
+                        </div>
+                        <div id="routeResult" class="alert alert-secondary mt-3 mb-0 small">
+                            Select a shelter destination to center the regional map on its verified location.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         EMERGENCY SOS MODAL
+    ========================================================== -->
+    <div class="modal fade" id="sosModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Emergency Assistance</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary small mb-3">
+                        If you are facing an active landslide, mudslide, or flash flood emergency, immediately contact national disaster authorities:
+                    </p>
+                    <div class="list-group mb-3">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><strong>NDRF National Helpline</strong><div class="small text-muted">National Disaster Response Force</div></div>
+                            <span class="badge bg-danger fs-6">1078</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><strong>National Emergency</strong><div class="small text-muted">Pan-India Emergency Number</div></div>
+                            <span class="badge bg-danger fs-6">112</span>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="report-issue.html" class="btn btn-outline-danger">
+                            <i class="bi bi-flag-fill me-1"></i> Submit Citizen Hazard Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- API Client & Offline Sync Engine -->
+    <script src="api.js"></script>
+    <script src="offline-sync.js"></script>
+    <!-- Live Risk Map JS -->
+    <script src="live-risk-map.js"></script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User &amp; Responder Profile — TerraWatch NER</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Design System Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+    <!-- =========================================================
+         ACADEMIC NOTICE BANNER
+    ========================================================== -->
+    <div class="ls-academic-banner">
+        <div>
+            <i class="bi bi-mortarboard me-1"></i>
+            <strong>Academic AI Prototype</strong> &bull; User &amp; Emergency Responder Identity Profile
+        </div>
+        <div class="d-none d-md-block">
+            Role-Based Access &bull; <a href="safety-guide.html">Safety SOPs</a>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         GLOBAL NAVIGATION HEADER
+    ========================================================== -->
+    <header class="ls-navbar">
+        <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center">
+            <!-- Brand -->
+            <a href="index.html" class="ls-navbar-brand">
+                <div class="shield-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                    <div class="brand-title">TerraWatch NER</div>
+                    <div class="brand-subtitle">NE Region AI Risk Monitor</div>
+                </div>
+            </a>
+
+            <!-- Primary Navigation Links -->
+            <nav class="d-none d-lg-block">
+                <ul class="ls-nav-links">
+                    <li><a href="index.html" class="ls-nav-link"><i class="bi bi-grid-fill me-1"></i> Overview</a></li>
+                    <li><a href="live-risk-map.html" class="ls-nav-link"><i class="bi bi-map-fill me-1"></i> Live Map</a></li>
+                    <li><a href="probability-risk.html" class="ls-nav-link"><i class="bi bi-cpu-fill me-1"></i> Risk Analysis</a></li>
+                    <li><a href="report-issue.html" class="ls-nav-link"><i class="bi bi-flag-fill me-1"></i> Reports</a></li>
+                    <li><a href="admin.html" class="ls-nav-link"><i class="bi bi-gear-fill me-1"></i> System</a></li>
+                </ul>
+            </nav>
+
+            <!-- Actions / Status -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="ls-visitor-badge d-none d-sm-inline-flex">
+                    <i class="bi bi-person-check-fill"></i> Active Session
+                </span>
+                <button type="button" class="ls-sos-btn" data-bs-toggle="modal" data-bs-target="#sosModal">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> SOS
+                </button>
+                <button class="btn btn-outline-light d-lg-none p-1 px-2 ms-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Offcanvas Menu -->
+    <div class="offcanvas offcanvas-end bg-dark text-white" tabindex="-1" id="mobileMenu">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h5 class="offcanvas-title fw-bold"><i class="bi bi-shield-check text-success me-2"></i> TerraWatch NER</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-4">
+            <div class="mb-3"><small class="text-secondary text-uppercase fw-semibold">Navigation</small></div>
+            <div class="d-flex flex-column gap-2">
+                <a href="index.html" class="btn btn-outline-light text-start"><i class="bi bi-grid-fill me-2"></i> Overview</a>
+                <a href="live-risk-map.html" class="btn btn-outline-light text-start"><i class="bi bi-map-fill me-2"></i> Live Map</a>
+                <a href="probability-risk.html" class="btn btn-outline-light text-start"><i class="bi bi-cpu-fill me-2"></i> Risk Analysis</a>
+                <a href="report-issue.html" class="btn btn-outline-light text-start"><i class="bi bi-flag-fill me-2"></i> Reports</a>
+                <a href="admin.html" class="btn btn-outline-light text-start"><i class="bi bi-gear-fill me-2"></i> System Operations</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MAIN PROFILE WORKSPACE
+    ========================================================== -->
+    <main class="py-4 py-lg-5">
+        <div class="container-xl px-3 px-lg-4" style="max-width: 860px;">
+
+            <!-- PAGE HEADER -->
+            <div class="mb-4">
+                <h3 class="fw-bold text-dark mb-1">User &amp; Responder Profile</h3>
+                <p class="text-secondary small mb-0">Manage personnel credentials, local state monitoring preferences, and offline synchronization cache.</p>
+            </div>
+
+            <!-- PROFILE SUMMARY CARD -->
+            <div class="card border p-4 bg-white shadow-sm mb-4">
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 pb-3 border-bottom mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+                            <i class="bi bi-person-fill fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark" id="profileDisplayName">Citizen Observer</h5>
+                            <small class="text-muted" id="profileEmail">citizen@terrawatch.in</small>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge bg-success-subtle text-success border border-success px-3 py-2" id="profileRoleBadge">
+                            <i class="bi bi-patch-check-fill me-1"></i> Public Access Mode
+                        </span>
+                    </div>
+                </div>
+
+                <!-- PROFILE FORM -->
+                <form id="profileForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Full Name</label>
+                            <input type="text" id="profName" class="form-control" value="Citizen Observer" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email Address</label>
+                            <input type="email" id="profEmail" class="form-control" value="citizen@terrawatch.in" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Primary Focus State</label>
+                            <select id="profState" class="form-select">
+                                <option value="Assam" selected>Assam</option>
+                                <option value="Meghalaya">Meghalaya</option>
+                                <option value="Sikkim">Sikkim</option>
+                                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                <option value="Mizoram">Mizoram</option>
+                                <option value="Nagaland">Nagaland</option>
+                                <option value="Manipur">Manipur</option>
+                                <option value="Tripura">Tripura</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Emergency Role</label>
+                            <select id="profRole" class="form-select">
+                                <option value="CITIZEN" selected>Citizen Observer (Public Exploration)</option>
+                                <option value="FIELD_OFFICER">Field Officer (On-Ground PWD / GSI)</option>
+                                <option value="DISASTER_OFFICIAL">Disaster Management Official (SDMA / NDRF)</option>
+                                <option value="ADMIN">System Administrator (MDoNER)</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mt-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div class="d-flex gap-2">
+                                <button type="submit" id="btnSaveProfile" class="btn btn-primary px-4">
+                                    <i class="bi bi-check-lg me-1"></i> Save Changes
+                                </button>
+                                <a href="index.html" class="btn btn-outline-secondary px-3">
+                                    <i class="bi bi-arrow-left me-1"></i> Overview
+                                </a>
+                            </div>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="(window.TerraWatchAPI || window.LandSafeAPI).logout()">
+                                <i class="bi bi-box-arrow-right me-1"></i> Clear Session &amp; Return to Overview
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- OFFLINE CACHE & STORAGE STATUS -->
+            <div class="card border p-4 bg-white shadow-sm mb-4">
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-hdd-network text-primary me-2"></i> Local Offline Cache &amp; Synchronization</h6>
+                <p class="text-secondary small mb-3">TerraWatch NER maintains local browser storage so hazard maps and relief shelter locations remain accessible during network disruption.</p>
+                
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <div class="border rounded p-3 text-center bg-light">
+                            <small class="text-muted d-block mb-1">STATIONS CACHED</small>
+                            <h4 class="fw-bold text-dark mb-0">32</h4>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="border rounded p-3 text-center bg-light">
+                            <small class="text-muted d-block mb-1">RELIEF SHELTERS</small>
+                            <h4 class="fw-bold text-success mb-0">4 Safe Zones</h4>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="border rounded p-3 text-center bg-light">
+                            <small class="text-muted d-block mb-1">QUEUED REPORTS</small>
+                            <h4 class="fw-bold text-info mb-0" id="offlineQueueCount">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Emergency SOS Modal -->
+    <div class="modal fade" id="sosModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Emergency Assistance</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary small mb-3">If you are facing an active landslide or flood emergency:</p>
+                    <div class="list-group mb-3">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><strong>NDRF National Helpline</strong></div><span class="badge bg-danger fs-6">1078</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><strong>National Emergency</strong></div><span class="badge bg-danger fs-6">112</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-top py-4 mt-auto">
+        <div class="container-xl px-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-shield-check text-success fs-5"></i>
+                <span class="fw-semibold text-dark">TerraWatch NER</span>
+                <span class="text-muted small">&bull; User Profile</span>
+            </div>
+            <div class="d-flex gap-3 small text-muted">
+                <a href="index.html" class="text-secondary">Overview</a>
+                <a href="live-risk-map.html" class="text-secondary">Live Map</a>
+                <a href="probability-risk.html" class="text-secondary">Risk Analysis</a>
+                <a href="report-issue.html" class="text-secondary">Reports</a>
+                <a href="admin.html" class="text-secondary">System</a>
+                <a href="safety-guide.html" class="text-secondary">Safety SOPs</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- API Client & Offline Sync -->
+    <script src="api.js"></script>
+    <script src="offline-sync.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function() {
+            const syncEngine = window.TerraWatchSync || window.LandSafeSync;
+            if (syncEngine && typeof syncEngine.getQueueLength === "function") {
+                const count = syncEngine.getQueueLength();
+                const qEl = document.getElementById("offlineQueueCount");
+                if (qEl) qEl.textContent = `${count} pending`;
+            }
+
+            const form = document.getElementById("profileForm");
+            if (form) {
+                form.addEventListener("submit", function(e) {
+                    e.preventDefault();
+                    const name = document.getElementById("profName").value;
+                    const email = document.getElementById("profEmail").value;
+                    const role = document.getElementById("profRole").value;
+
+                    document.getElementById("profileDisplayName").textContent = name;
+                    document.getElementById("profileEmail").textContent = email;
+                    document.getElementById("profileRoleBadge").textContent = role;
+
+                    alert("Profile updated successfully for this session.");
+                });
+            }
+        });
+    </script>
+</body>
+</html>

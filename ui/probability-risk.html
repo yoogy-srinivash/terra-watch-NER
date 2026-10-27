@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Risk Analysis Workspace — TerraWatch NER</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Design System Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- =========================================================
+         ACADEMIC NOTICE BANNER
+    ========================================================== -->
+    <div class="ls-academic-banner">
+        <div>
+            <i class="bi bi-mortarboard me-1"></i>
+            <strong>Academic AI Prototype</strong> &bull; LightGBM Active + XGBoost Standby &bull; TreeSHAP Explainability
+        </div>
+        <div class="d-none d-md-block">
+            Multi-Modal Fusion Architecture &bull; <a href="safety-guide.html">Safety SOPs</a> &bull; <a href="admin.html#models">Model Methodology</a>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         GLOBAL NAVIGATION HEADER
+    ========================================================== -->
+    <header class="ls-navbar">
+        <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center">
+            <!-- Brand -->
+            <a href="index.html" class="ls-navbar-brand">
+                <div class="shield-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                    <div class="brand-title">TerraWatch NER</div>
+                    <div class="brand-subtitle">NE Region AI Risk Monitor</div>
+                </div>
+            </a>
+
+            <!-- Primary Navigation Links -->
+            <nav class="d-none d-lg-block">
+                <ul class="ls-nav-links">
+                    <li><a href="index.html" class="ls-nav-link"><i class="bi bi-grid-fill me-1"></i> Overview</a></li>
+                    <li><a href="live-risk-map.html" class="ls-nav-link"><i class="bi bi-map-fill me-1"></i> Live Map</a></li>
+                    <li><a href="probability-risk.html" class="ls-nav-link active"><i class="bi bi-cpu-fill me-1"></i> Risk Analysis</a></li>
+                    <li><a href="report-issue.html" class="ls-nav-link"><i class="bi bi-flag-fill me-1"></i> Reports</a></li>
+                    <li><a href="admin.html" class="ls-nav-link"><i class="bi bi-gear-fill me-1"></i> System</a></li>
+                </ul>
+            </nav>
+
+            <!-- Actions / Status -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="ls-visitor-badge d-none d-sm-inline-flex">
+                    <i class="bi bi-person-check-fill"></i> Visitor Mode
+                </span>
+                <button type="button" class="ls-sos-btn" data-bs-toggle="modal" data-bs-target="#sosModal">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> SOS
+                </button>
+                <!-- Mobile Hamburger Toggle -->
+                <button class="btn btn-outline-light d-lg-none p-1 px-2 ms-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Offcanvas Menu -->
+    <div class="offcanvas offcanvas-end bg-dark text-white" tabindex="-1" id="mobileMenu">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h5 class="offcanvas-title fw-bold"><i class="bi bi-shield-check text-success me-2"></i> TerraWatch NER</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-4">
+            <div class="mb-3">
+                <small class="text-secondary text-uppercase fw-semibold">Navigation</small>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <a href="index.html" class="btn btn-outline-light text-start"><i class="bi bi-grid-fill me-2"></i> Overview</a>
+                <a href="live-risk-map.html" class="btn btn-outline-light text-start"><i class="bi bi-map-fill me-2"></i> Live Map</a>
+                <a href="probability-risk.html" class="btn btn-primary text-start"><i class="bi bi-cpu-fill me-2"></i> Risk Analysis</a>
+                <a href="report-issue.html" class="btn btn-outline-light text-start"><i class="bi bi-flag-fill me-2"></i> Reports</a>
+                <a href="admin.html" class="btn btn-outline-light text-start"><i class="bi bi-gear-fill me-2"></i> System Operations</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MAIN RISK ANALYSIS WORKSPACE
+    ========================================================== -->
+    <main class="py-4">
+        <div class="container-xl px-3 px-lg-4">
+
+            <!-- WORKSPACE HEADER & LOCATION SELECTOR -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2 border-bottom">
+                <div>
+                    <h3 class="fw-bold mb-1 text-dark">Assess Landslide Risk</h3>
+                    <p class="text-muted small mb-0">Evaluate scenario presets or custom geotechnical parameters using real-time machine learning inference.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="locationSelect" class="form-label small fw-semibold text-secondary mb-0 text-nowrap">
+                        <i class="bi bi-geo-alt-fill me-1"></i> Focus City:
+                    </label>
+                    <select id="locationSelect" class="form-select form-select-sm fw-semibold" style="min-width: 170px;">
+                        <option value="Guwahati" selected>Guwahati (Assam)</option>
+                        <option value="Shillong">Shillong (Meghalaya)</option>
+                        <option value="Cherrapunji">Cherrapunji (Meghalaya)</option>
+                        <option value="Aizawl">Aizawl (Mizoram)</option>
+                        <option value="Gangtok">Gangtok (Sikkim)</option>
+                        <option value="Kohima">Kohima (Nagaland)</option>
+                        <option value="Itanagar">Itanagar (Arunachal)</option>
+                        <option value="Imphal">Imphal (Manipur)</option>
+                        <option value="Agartala">Agartala (Tripura)</option>
+                        <option value="Haflong">Haflong (Assam)</option>
+                        <option value="Tawang">Tawang (Arunachal)</option>
+                    </select>
+                    <button id="btnPredictRisk" class="btn btn-sm btn-primary text-nowrap" type="button">
+                        <i class="bi bi-lightning-charge-fill me-1"></i> Run Inference
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 1: SCENARIO PRESETS (1-CLICK EVALUATION) -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0 text-uppercase small text-muted">
+                        <i class="bi bi-sliders2 me-1"></i> Step 1: Select Environmental Scenario Preset
+                    </h6>
+                    <small class="text-secondary">Click any preset to trigger real-time ML prediction</small>
+                </div>
+
+                <div class="scenario-card-grid">
+                    <!-- Preset 1: Normal -->
+                    <div class="scenario-card" id="presetNormal">
+                        <div class="icon-box text-success"><i class="bi bi-sun-fill"></i></div>
+                        <div class="title">Normal Baseline</div>
+                        <div class="desc">Dry seasonal weather, stable slope conditions.</div>
+                    </div>
+
+                    <!-- Preset 2: Monsoon -->
+                    <div class="scenario-card" id="presetMonsoon">
+                        <div class="icon-box text-primary"><i class="bi bi-cloud-rain-heavy-fill"></i></div>
+                        <div class="title">Heavy Monsoon</div>
+                        <div class="desc">High 24h precipitation, active drainage saturation.</div>
+                    </div>
+
+                    <!-- Preset 3: Moisture -->
+                    <div class="scenario-card" id="presetMoisture">
+                        <div class="icon-box text-info"><i class="bi bi-droplet-half"></i></div>
+                        <div class="title">Rising Soil Moisture</div>
+                        <div class="desc">Prolonged drizzle saturating topsoil regolith.</div>
+                    </div>
+
+                    <!-- Preset 4: Pore Pressure -->
+                    <div class="scenario-card" id="presetPorePress">
+                        <div class="icon-box text-warning"><i class="bi bi-speedometer2"></i></div>
+                        <div class="title">High Pore Pressure</div>
+                        <div class="desc">Subsurface ground water buildup weakening shear strength.</div>
+                    </div>
+
+                    <!-- Preset 5: Vibration -->
+                    <div class="scenario-card" id="presetVibration">
+                        <div class="icon-box text-danger"><i class="bi bi-activity"></i></div>
+                        <div class="title">High Vibration</div>
+                        <div class="desc">Minor tremors or road blasting destabilizing slopes.</div>
+                    </div>
+
+                    <!-- Preset 6: Combined -->
+                    <div class="scenario-card" id="presetCombined">
+                        <div class="icon-box text-dark"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                        <div class="title">Combined Warning</div>
+                        <div class="desc">Compound monsoon surge with high pore pressure.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: RISK RESULTS & EXPLAINABLE FACTORS -->
+            <div class="row g-4 mb-4">
+                <!-- Left: Result Gauge & Decision -->
+                <div class="col-lg-5">
+                    <div class="card h-100 p-4 border bg-white">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <small class="text-uppercase text-muted fw-bold" style="font-size: 0.72rem;">Model Prediction Result</small>
+                                <h5 class="fw-bold mb-0 text-dark" id="resultLocationTitle">Guwahati, Assam</h5>
+                            </div>
+                            <span class="badge bg-danger px-3 py-2 fs-6" id="overallRiskStatus">HIGH RISK</span>
+                        </div>
+
+                        <!-- Big Risk Score -->
+                        <div class="text-center py-3 bg-light rounded-3 mb-3">
+                            <div class="display-3 fw-bold text-danger mb-0" id="overallRiskValue">78%</div>
+                            <small class="text-muted">Calibrated Landslide Probability Index (0–100)</small>
+                            <div class="progress mt-2 mx-auto" style="height: 8px; max-width: 240px;">
+                                <div class="progress-bar bg-danger" id="overallRiskProgress" style="width: 78%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Plain English Situational Advice -->
+                        <div class="alert alert-light border small text-secondary mb-3 py-2 px-3">
+                            <strong><i class="bi bi-info-circle text-primary me-1"></i> Situational Assessment:</strong>
+                            <div class="mt-1" id="resultAdviceText">
+                                Elevated soil saturation and steep slope gradient trigger proactive monitoring. Keep drainage corridors clear.
+                            </div>
+                        </div>
+
+                        <!-- Fused Model & Overrides Status -->
+                        <div id="fusionOverrideBanner" class="alert alert-danger py-2 px-3 small d-none mb-3">
+                            <strong id="fusionOverrideRule"><i class="bi bi-shield-exclamation me-1"></i> SAFETY OVERRIDE ACTIVE</strong>
+                            <div id="fusionOverrideReason" class="mt-1">Pore water pressure exceeds critical geotechnical safety limits.</div>
+                        </div>
+
+                        <!-- Quick Action -->
+                        <a href="live-risk-map.html" class="btn btn-outline-secondary btn-sm w-100 mt-auto">
+                            <i class="bi bi-map me-1"></i> View Station on Geographic Map
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right: Top Contributing Factors (Plain-Language TreeSHAP) -->
+                <div class="col-lg-7">
+                    <div class="card h-100 p-4 border bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark">Top Contributing Factors (Explainable AI)</h6>
+                                <small class="text-muted">TreeSHAP attribution ranking what drives this risk score</small>
+                            </div>
+                            <span class="badge bg-primary-subtle text-primary" id="fusionScoreBadge">Fused: 78%</span>
+                        </div>
+
+                        <!-- Factor 1: Rainfall -->
+                        <div class="factor-bar-row">
+                            <div class="factor-header">
+                                <span class="name"><i class="bi bi-cloud-rain text-primary me-1"></i> 24h Rainfall Accumulation</span>
+                                <span class="val" id="factorRainfallVal">142 mm &bull; High Impact</span>
+                            </div>
+                            <div class="factor-bar-track">
+                                <div class="factor-bar-fill bg-danger" id="factorRainfallBar" style="width: 78%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Factor 2: Ground Water Pressure -->
+                        <div class="factor-bar-row">
+                            <div class="factor-header">
+                                <span class="name"><i class="bi bi-speedometer2 text-warning me-1"></i> Ground Water / Pore Pressure</span>
+                                <span class="val" id="factorPorePressVal">18.4 kPa &bull; Rising</span>
+                            </div>
+                            <div class="factor-bar-track">
+                                <div class="factor-bar-fill bg-danger" id="factorPorePressBar" style="width: 72%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Factor 3: Terrain Slope -->
+                        <div class="factor-bar-row">
+                            <div class="factor-header">
+                                <span class="name"><i class="bi bi-layers text-secondary me-1"></i> Terrain Slope Angle</span>
+                                <span class="val" id="factorSlopeVal">38° &bull; Steep Gradient</span>
+                            </div>
+                            <div class="factor-bar-track">
+                                <div class="factor-bar-fill bg-warning" id="factorSlopeBar" style="width: 62%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Factor 4: Soil Moisture -->
+                        <div class="factor-bar-row">
+                            <div class="factor-header">
+                                <span class="name"><i class="bi bi-droplet-half text-info me-1"></i> Surface Soil Saturation</span>
+                                <span class="val" id="factorSoilVal">84% &bull; Near Saturation</span>
+                            </div>
+                            <div class="factor-bar-track">
+                                <div class="factor-bar-fill bg-warning" id="factorSoilBar" style="width: 58%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- 7-Day Trend Canvas -->
+                        <div class="mt-3 pt-2 border-top">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="fw-semibold text-secondary">7-Day Risk Probability Trend</small>
+                                <span class="badge bg-secondary" id="fusionTemporalTrend">STABLE</span>
+                            </div>
+                            <div style="height: 120px;">
+                                <canvas id="riskChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: MULTI-MODAL EVIDENCE STREAMS VISUALIZATION -->
+            <div class="card border p-4 bg-white mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">Multi-Modal Risk Fusion Streams</h6>
+                        <small class="text-muted">Three physical evidence streams evaluated independently and merged via calibrated weights</small>
+                    </div>
+                    <span class="badge bg-light text-secondary border" id="fusionSufficiencyBadge">Sufficiency: SUFFICIENT</span>
+                </div>
+
+                <div class="row g-3 text-center">
+                    <!-- Stream 1: Spatial -->
+                    <div class="col-md-4">
+                        <div class="stream-card h-100">
+                            <div class="stream-title"><i class="bi bi-layers-fill text-primary me-1"></i> Spatial Stream (<span id="fusionSpatialWeight">w=0.50</span>)</div>
+                            <div class="stream-score text-primary" id="spatialStreamScore">76%</div>
+                            <div class="small fw-semibold text-dark" id="fusionActiveModel">LightGBM Pipeline</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Terrain morphology, elevation, lithology & fault proximity</div>
+                        </div>
+                    </div>
+
+                    <!-- Stream 2: Temporal -->
+                    <div class="col-md-4">
+                        <div class="stream-card h-100">
+                            <div class="stream-title"><i class="bi bi-activity text-info me-1"></i> Temporal Stream (<span id="fusionTemporalWeight">w=0.35</span>)</div>
+                            <div class="stream-score text-info" id="temporalStreamScore">82%</div>
+                            <div class="small fw-semibold text-dark" id="fusionTemporalSufficiency">SUFFICIENT (3/3 windows)</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Pore pressure acceleration, moisture saturation rate</div>
+                        </div>
+                    </div>
+
+                    <!-- Stream 3: Visual -->
+                    <div class="col-md-4">
+                        <div class="stream-card h-100">
+                            <div class="stream-title"><i class="bi bi-camera-fill text-warning me-1"></i> Visual Stream (<span id="fusionVisualWeight">w=0.15</span>)</div>
+                            <div class="stream-score text-warning" id="visualStreamScore">--</div>
+                            <div class="small fw-semibold text-dark" id="fusionVisualHazard">None / Uncalibrated</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Crowd field photos & tension crack detection (Standby)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 4: PROGRESSIVE DISCLOSURE — ADVANCED CONTROLS & MODEL DETAILS -->
+            <div class="accordion mb-4" id="advancedAccordion">
+                <!-- Accordion Item 1: Custom Sliders -->
+                <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-semibold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSliders">
+                            <i class="bi bi-sliders me-2 text-primary"></i> Advanced Parameter Controls (Fine-Tune Numeric Sliders)
+                        </button>
+                    </h2>
+                    <div id="collapseSliders" class="accordion-collapse collapse" data-bs-parent="#advancedAccordion">
+                        <div class="accordion-body bg-light p-4">
+                            <div class="row g-4">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-dark d-flex justify-content-between">
+                                        <span>24h Rainfall:</span>
+                                        <span class="fw-bold text-primary" id="simRainfallVal">142 mm</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="simRainfall" min="0" max="350" step="5" value="142">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-dark d-flex justify-content-between">
+                                        <span>Soil Moisture:</span>
+                                        <span class="fw-bold text-info" id="simSoilVal">84%</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="simSoil" min="10" max="100" step="2" value="84">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-dark d-flex justify-content-between">
+                                        <span>Slope Angle:</span>
+                                        <span class="fw-bold text-warning" id="simSlopeVal">38°</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="simSlope" min="5" max="65" step="1" value="38">
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
+                                <button id="btnResetSimulation" class="btn btn-sm btn-outline-secondary" type="button">Reset Sliders</button>
+                                <button id="btnRunSimulation" class="btn btn-sm btn-primary" type="button">
+                                    <i class="bi bi-lightning-charge-fill me-1"></i> Run Custom Simulation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accordion Item 2: Technical Model Specs & TreeSHAP List -->
+                <div class="accordion-item border rounded-3 overflow-hidden">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-semibold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseModelTech">
+                            <i class="bi bi-cpu me-2 text-success"></i> Technical Model Details, TreeSHAP Attributions & Ensemble Agreement
+                        </button>
+                    </h2>
+                    <div id="collapseModelTech" class="accordion-collapse collapse" data-bs-parent="#advancedAccordion">
+                        <div class="accordion-body bg-white p-4">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-2">Dual-Model Agreement & Verification</h6>
+                                    <table class="table table-sm table-bordered small">
+                                        <tbody>
+                                            <tr>
+                                                <td class="text-muted">Primary Active Model</td>
+                                                <td><span class="badge bg-success">LightGBM Classifier</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">Standby Cross-Check</td>
+                                                <td><span class="badge bg-secondary">XGBoost Ensemble</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">Dual Ensemble Agreement</td>
+                                                <td class="fw-bold text-dark"><span id="fusionAgreement">97</span>% concordance</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">Explainability Engine</td>
+                                                <td>TreeSHAP Exact Additive Attributions</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-2">Detailed TreeSHAP Factor Attributions</h6>
+                                    <ul class="list-unstyled small text-secondary" id="fusionShapList">
+                                        <li>&bull; <strong>rainfall_24h_mm</strong>: +0.412 attribution</li>
+                                        <li>&bull; <strong>slope_angle_deg</strong>: +0.285 attribution</li>
+                                        <li>&bull; <strong>soil_moisture_pct</strong>: +0.198 attribution</li>
+                                    </ul>
+                                    <div class="small text-muted mt-2">
+                                        <em>Decision basis: <span id="fusionDecisionSummary">Continuous multi-modal risk integration with positive attribution.</span></em>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- =========================================================
+         EMERGENCY SOS MODAL
+    ========================================================== -->
+    <div class="modal fade" id="sosModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Emergency Assistance</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary small mb-3">If you are facing an active landslide emergency:</p>
+                    <div class="list-group mb-3">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><strong>NDRF National Helpline</strong></div><span class="badge bg-danger fs-6">1078</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><strong>National Emergency</strong></div><span class="badge bg-danger fs-6">112</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-top py-4 mt-auto">
+        <div class="container-xl px-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-shield-check text-success fs-5"></i>
+                <span class="fw-semibold text-dark">TerraWatch NER</span>
+                <span class="text-muted small">&bull; AI Risk Analysis Workspace</span>
+            </div>
+            <div class="d-flex gap-3 small text-muted">
+                <a href="index.html" class="text-secondary">Overview</a>
+                <a href="live-risk-map.html" class="text-secondary">Live Map</a>
+                <a href="probability-risk.html" class="text-secondary">Risk Analysis</a>
+                <a href="report-issue.html" class="text-secondary">Reports</a>
+                <a href="admin.html" class="text-secondary">System</a>
+                <a href="safety-guide.html" class="text-secondary">Safety SOPs</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- API Client & Offline Sync Engine -->
+    <script src="api.js"></script>
+    <script src="offline-sync.js"></script>
+    <!-- Probability Risk JS -->
+    <script src="probability-risk.js"></script>
+</body>
+</html>

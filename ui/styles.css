@@ -1,0 +1,30 @@
+/* =================================================
+   LANDSLIDE HERO BACKGROUND
+================================================= */
+
+.landslide-hero {
+    min-height: 720px;
+}
+
+.landslide-bg-image {
+    object-fit: cover;
+    object-position: center;
+}
+
+.landslide-overlay {
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.landslide-hero .container-fluid {
+    z-index: 2;
+}
+
+@media (max-width: 991px) {
+
+    .landslide-hero {
+        min-height: auto;
+    }
+
+}

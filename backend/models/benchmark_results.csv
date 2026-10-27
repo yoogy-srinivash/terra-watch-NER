@@ -1,0 +1,7 @@
+Model,Recall (Sensitivity),ROC-AUC,F1-Score,Precision,Accuracy,Composite Disaster Score,Training Time (s)
+LightGBM Classifier,98.04,0.9961,0.9772,97.4,97.0,0.9871,0.22
+Gradient Boosting (GBDT),98.26,0.9936,0.9767,97.09,96.93,0.9867,7.15
+XGBoost Classifier,97.82,0.9961,0.9766,97.5,96.93,0.9862,0.65
+Logistic Regression,97.82,0.9955,0.9761,97.39,96.86,0.9859,0.07
+Random Forest Classifier,95.2,0.9918,0.9615,97.11,95.0,0.9724,0.45
+Decision Tree,95.86,0.9624,0.9472,93.61,93.0,0.9593,0.09

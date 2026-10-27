@@ -1,0 +1,49 @@
+{
+  "best_model": "LightGBM Classifier",
+  "active_model": "LightGBM Classifier",
+  "standby_model": "XGBoost Classifier",
+  "metrics": {
+    "Model": "LightGBM Classifier",
+    "Recall (Sensitivity)": 98.04,
+    "ROC-AUC": 0.9961,
+    "F1-Score": 0.9772,
+    "Precision": 97.4,
+    "Accuracy": 97.0,
+    "Composite Disaster Score": 0.9871,
+    "Training Time (s)": 0.22
+  },
+  "standby_metrics": {
+    "Model": "XGBoost Classifier",
+    "Recall (Sensitivity)": 97.82,
+    "ROC-AUC": 0.9961,
+    "F1-Score": 0.9766,
+    "Precision": 97.5,
+    "Accuracy": 96.93,
+    "Composite Disaster Score": 0.9862,
+    "Training Time (s)": 0.65
+  },
+  "trained_at": "2026-10-06 18:36:51",
+  "features": [
+    "elevation_m",
+    "slope_angle_deg",
+    "aspect_deg",
+    "plan_curvature",
+    "profile_curvature",
+    "soil_depth_m",
+    "ndvi",
+    "distance_to_road_m",
+    "distance_to_fault_m",
+    "distance_to_stream_m",
+    "rainfall_24h_mm",
+    "rainfall_72h_mm",
+    "rainfall_intensity_mm_h",
+    "soil_moisture_pct",
+    "pore_pressure_kpa",
+    "ground_vibration_g",
+    "state",
+    "lithology",
+    "soil_type",
+    "land_use"
+  ],
+  "n_samples": 7000
+}

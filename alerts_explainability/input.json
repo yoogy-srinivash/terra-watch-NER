@@ -1,0 +1,12 @@
+{
+    "location": {
+        "state": "Sikkim",
+        "district": "Gangtok"
+    },
+    "risk_score": 0.87,
+    "features": {
+        "rainfall": 145,
+        "soil_moisture": 0.82,
+        "slope": 37
+    }
+}
