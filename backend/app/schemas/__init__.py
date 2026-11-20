@@ -67,6 +67,8 @@ class PredictionRequest(BaseModel):
     slope_angle_deg: Optional[float] = None
     elevation_m: Optional[float] = None
     distance_to_road_m: Optional[float] = None
+    pore_pressure_kpa: Optional[float] = None
+    ground_vibration_g: Optional[float] = None
 
 class RiskFactor(BaseModel):
     factor: str
@@ -95,6 +97,7 @@ class SensorDataSubmission(BaseModel):
     temperature: float = Field(default=24.0, ge=-20.0, le=60.0)
     pore_pressure: Optional[float] = 0.0
     ground_vibration: Optional[float] = 0.0
+    rainfall_1h: Optional[float] = 0.0
     battery_level: Optional[int] = Field(default=95, ge=0, le=100)
     signal_strength: Optional[int] = Field(default=-65, ge=-120, le=0)
     is_simulated: bool = True

@@ -39,6 +39,39 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
     
     # Locations risk count
     predictions = db.query(RiskPrediction).all()
+    if not predictions:
+        # Evaluate dynamically from Location records using ml_engine
+        from ..services.ml_service import ml_engine
+        locations = db.query(Location).all()
+        for loc in locations:
+            pred = ml_engine.predict({
+                "latitude": loc.latitude,
+                "longitude": loc.longitude,
+                "state": loc.state,
+                "district": loc.district,
+                "name": loc.name,
+                "location_id": loc.id
+            })
+            rp = RiskPrediction(
+                location_id=loc.id,
+                risk_score=pred["risk_score"],
+                risk_probability=pred["risk_probability"],
+                risk_level=pred["risk_level"],
+                landslide_risk_pct=pred["landslide_risk_pct"],
+                flood_risk_pct=pred["flood_risk_pct"],
+                rainfall_factor_pct=pred["factors"]["rainfall"],
+                soil_factor_pct=pred["factors"]["soil"],
+                slope_factor_pct=pred["factors"]["slope"],
+                water_factor_pct=pred["factors"]["water"],
+                predicted_at=datetime.utcnow()
+            )
+            db.add(rp)
+        try:
+            db.commit()
+            predictions = db.query(RiskPrediction).all()
+        except Exception:
+            db.rollback()
+
     if predictions:
         high_risk_locs = sum(1 for p in predictions if p.risk_level in ["HIGH", "CRITICAL"])
         overall = int(round(sum(p.risk_score for p in predictions) / len(predictions)))
@@ -92,11 +125,16 @@ def get_monitor_locations(db: Session = Depends(get_db)):
             risk = pred.risk_level.capitalize()
             hazard = "Landslide" if landslide >= flood else "Flood"
         else:
-            score = 65
-            flood = 50
-            landslide = 65
-            risk = "Moderate"
-            hazard = loc.primary_hazard or "Landslide"
+            from ..services.ml_service import ml_engine
+            live = ml_engine.predict({
+                "latitude": loc.latitude, "longitude": loc.longitude,
+                "state": loc.state, "district": loc.district, "name": loc.name, "location_id": loc.id
+            })
+            score = int(round(live["risk_score"]))
+            flood = int(round(live["flood_risk_pct"]))
+            landslide = int(round(live["landslide_risk_pct"]))
+            risk = live["risk_level"].capitalize()
+            hazard = "Landslide" if landslide >= flood else "Flood"
             
         results.append({
             "name": loc.name,

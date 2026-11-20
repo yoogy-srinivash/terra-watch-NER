@@ -143,42 +143,42 @@
                     <div class="scenario-card" id="presetNormal">
                         <div class="icon-box text-success"><i class="bi bi-sun-fill"></i></div>
                         <div class="title">Normal Baseline</div>
-                        <div class="desc">Dry seasonal weather, stable slope conditions.</div>
+                        <div class="desc">10 mm rain, 30% moisture, 15° slope. Stable seasonal baseline.</div>
                     </div>
 
-                    <!-- Preset 2: Monsoon -->
-                    <div class="scenario-card" id="presetMonsoon">
-                        <div class="icon-box text-primary"><i class="bi bi-cloud-rain-heavy-fill"></i></div>
-                        <div class="title">Heavy Monsoon</div>
-                        <div class="desc">High 24h precipitation, active drainage saturation.</div>
-                    </div>
-
-                    <!-- Preset 3: Moisture -->
+                    <!-- Preset 2: Moisture -->
                     <div class="scenario-card" id="presetMoisture">
                         <div class="icon-box text-info"><i class="bi bi-droplet-half"></i></div>
-                        <div class="title">Rising Soil Moisture</div>
-                        <div class="desc">Prolonged drizzle saturating topsoil regolith.</div>
+                        <div class="title">Infiltration Advisory</div>
+                        <div class="desc">28 mm rain, 32% moisture, 22° slope. Moderate regolith saturation.</div>
+                    </div>
+
+                    <!-- Preset 3: Monsoon -->
+                    <div class="scenario-card" id="presetMonsoon">
+                        <div class="icon-box text-primary"><i class="bi bi-cloud-rain-heavy-fill"></i></div>
+                        <div class="title">Severe Monsoon Storm</div>
+                        <div class="desc">35 mm rain, 38% moisture, 26° slope. High precipitation surge.</div>
                     </div>
 
                     <!-- Preset 4: Pore Pressure -->
                     <div class="scenario-card" id="presetPorePress">
                         <div class="icon-box text-warning"><i class="bi bi-speedometer2"></i></div>
                         <div class="title">High Pore Pressure</div>
-                        <div class="desc">Subsurface ground water buildup weakening shear strength.</div>
+                        <div class="desc">29.5 kPa ground water pressure. Triggers Piezometer Override.</div>
                     </div>
 
                     <!-- Preset 5: Vibration -->
                     <div class="scenario-card" id="presetVibration">
                         <div class="icon-box text-danger"><i class="bi bi-activity"></i></div>
-                        <div class="title">High Vibration</div>
-                        <div class="desc">Minor tremors or road blasting destabilizing slopes.</div>
+                        <div class="title">High Vibration Shock</div>
+                        <div class="desc">1.60 g seismic/blasting tremor. Triggers Vibration Spike Override.</div>
                     </div>
 
                     <!-- Preset 6: Combined -->
                     <div class="scenario-card" id="presetCombined">
                         <div class="icon-box text-dark"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                        <div class="title">Combined Warning</div>
-                        <div class="desc">Compound monsoon surge with high pore pressure.</div>
+                        <div class="title">Compound Catastrophe</div>
+                        <div class="desc">180 mm rain, 92% moisture, 38 kPa pore pressure. Critical emergency.</div>
                     </div>
                 </div>
             </div>
@@ -353,23 +353,39 @@
                                 <div class="col-md-4">
                                     <label class="form-label small fw-semibold text-dark d-flex justify-content-between">
                                         <span>24h Rainfall:</span>
-                                        <span class="fw-bold text-primary" id="simRainfallVal">142 mm</span>
+                                        <span class="fw-bold text-primary" id="simRainfallVal">28 mm</span>
                                     </label>
-                                    <input type="range" class="form-range" id="simRainfall" min="0" max="350" step="5" value="142">
+                                    <input type="range" class="form-range" id="simRainfall" min="0" max="350" step="1" value="28">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small fw-semibold text-dark d-flex justify-content-between">
                                         <span>Soil Moisture:</span>
-                                        <span class="fw-bold text-info" id="simSoilVal">84%</span>
+                                        <span class="fw-bold text-info" id="simSoilVal">32%</span>
                                     </label>
-                                    <input type="range" class="form-range" id="simSoil" min="10" max="100" step="2" value="84">
+                                    <input type="range" class="form-range" id="simSoil" min="10" max="100" step="1" value="32">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small fw-semibold text-dark d-flex justify-content-between">
                                         <span>Slope Angle:</span>
-                                        <span class="fw-bold text-warning" id="simSlopeVal">38°</span>
+                                        <span class="fw-bold text-warning" id="simSlopeVal">22°</span>
                                     </label>
-                                    <input type="range" class="form-range" id="simSlope" min="5" max="65" step="1" value="38">
+                                    <input type="range" class="form-range" id="simSlope" min="5" max="65" step="1" value="22">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark d-flex justify-content-between">
+                                        <span>Pore Water Pressure (Piezometer):</span>
+                                        <span class="fw-bold text-danger" id="simPorePressVal">6.0 kPa</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="simPorePress" min="0" max="60" step="0.5" value="6.0">
+                                    <small class="text-muted d-block" style="font-size:0.75rem;">Geotechnical Safety Override triggers at &ge; 25.0 kPa</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark d-flex justify-content-between">
+                                        <span>Ground Vibration / Seismic (Accelerometer):</span>
+                                        <span class="fw-bold text-danger" id="simVibrationVal">0.004 g</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="simVibration" min="0" max="3.0" step="0.005" value="0.004">
+                                    <small class="text-muted d-block" style="font-size:0.75rem;">Geotechnical Safety Override triggers at &ge; 1.500 g</small>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">

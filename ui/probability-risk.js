@@ -205,30 +205,38 @@ function updateFactorBars() {
     const smVal = getElement("factorSoilVal");
     const smBar = getElement("factorSoilBar");
 
-    const rf = probabilityData.factors.rainfall || 72;
-    const sm = probabilityData.factors.soil || 84;
-    const sl = probabilityData.factors.terrain || 61;
-    const pp = probabilityData.factors.water || 55;
+    const simRain = getElement("simRainfall");
+    const simSoil = getElement("simSoil");
+    const simSlope = getElement("simSlope");
+    const simPore = getElement("simPorePress");
+
+    const rf = simRain ? parseFloat(simRain.value) : (probabilityData.factors.rainfall || 28);
+    const sm = simSoil ? parseFloat(simSoil.value) : (probabilityData.factors.soil || 32);
+    const sl = simSlope ? parseFloat(simSlope.value) : (probabilityData.factors.terrain || 22);
+    const pp = simPore ? parseFloat(simPore.value) : (probabilityData.factors.water ? probabilityData.factors.water * 0.28 : 6.0);
 
     if (rfVal && rfBar) {
-        rfVal.textContent = `${Math.round(rf * 2)} mm • ${rf >= 60 ? 'High Impact' : 'Normal'}`;
-        rfBar.style.width = `${Math.min(100, Math.max(5, rf))}%`;
-        rfBar.className = `factor-bar-fill ${rf >= 60 ? 'bg-danger' : 'bg-warning'}`;
+        rfVal.textContent = `${Math.round(rf)} mm • ${rf >= 35 ? 'Critical Impact' : rf >= 25 ? 'High Impact' : 'Normal'}`;
+        const rfPct = Math.min(100, Math.max(5, Math.round((rf / 150) * 100)));
+        rfBar.style.width = `${rfPct}%`;
+        rfBar.className = `factor-bar-fill ${rf >= 35 ? 'bg-danger' : rf >= 25 ? 'bg-warning' : 'bg-info'}`;
     }
     if (ppVal && ppBar) {
-        ppVal.textContent = `${(pp * 0.28).toFixed(1)} kPa • ${pp >= 60 ? 'Elevated Pressure' : 'Normal'}`;
-        ppBar.style.width = `${Math.min(100, Math.max(5, pp))}%`;
-        ppBar.className = `factor-bar-fill ${pp >= 60 ? 'bg-danger' : 'bg-warning'}`;
+        ppVal.textContent = `${pp.toFixed(1)} kPa • ${pp >= 25 ? 'Critical (Override Active)' : pp >= 15 ? 'Elevated Pressure' : 'Normal'}`;
+        const ppPct = Math.min(100, Math.max(5, Math.round((pp / 40) * 100)));
+        ppBar.style.width = `${ppPct}%`;
+        ppBar.className = `factor-bar-fill ${pp >= 25 ? 'bg-danger' : pp >= 15 ? 'bg-warning' : 'bg-info'}`;
     }
     if (slVal && slBar) {
-        slVal.textContent = `${Math.round(sl * 0.55)}° • ${sl >= 60 ? 'Steep Gradient' : 'Moderate'}`;
-        slBar.style.width = `${Math.min(100, Math.max(5, sl))}%`;
-        slBar.className = `factor-bar-fill ${sl >= 60 ? 'bg-danger' : 'bg-warning'}`;
+        slVal.textContent = `${Math.round(sl)}° • ${sl >= 30 ? 'Steep Gradient' : 'Moderate'}`;
+        const slPct = Math.min(100, Math.max(5, Math.round((sl / 60) * 100)));
+        slBar.style.width = `${slPct}%`;
+        slBar.className = `factor-bar-fill ${sl >= 30 ? 'bg-danger' : 'bg-warning'}`;
     }
     if (smVal && smBar) {
-        smVal.textContent = `${Math.round(sm)}% • ${sm >= 75 ? 'Near Saturation' : 'Normal'}`;
-        smBar.style.width = `${Math.min(100, Math.max(5, sm))}%`;
-        smBar.className = `factor-bar-fill ${sm >= 60 ? 'bg-danger' : 'bg-warning'}`;
+        smVal.textContent = `${Math.round(sm)}% • ${sm >= 75 ? 'Near Saturation' : sm >= 50 ? 'Elevated Saturation' : 'Normal'}`;
+        smBar.style.width = `${Math.min(100, Math.max(5, Math.round(sm)))}%`;
+        smBar.className = `factor-bar-fill ${sm >= 75 ? 'bg-danger' : sm >= 50 ? 'bg-warning' : 'bg-success'}`;
     }
 
     const titleEl = getElement("resultLocationTitle");
@@ -322,9 +330,13 @@ async function fetchLocationRisk(city) {
             const simRain = getElement("simRainfall");
             const simSoil = getElement("simSoil");
             const simSlope = getElement("simSlope");
-            if (simRain) simRain.value = probabilityData.factors.rainfall * 2;
-            if (simSoil) simSoil.value = probabilityData.factors.soil;
-            if (simSlope) simSlope.value = Math.round(probabilityData.factors.terrain * 0.55);
+            const simPore = getElement("simPorePress");
+            const simVib = getElement("simVibration");
+            if (simRain) simRain.value = 28;
+            if (simSoil) simSoil.value = probabilityData.factors.soil || 32;
+            if (simSlope) simSlope.value = Math.round(probabilityData.factors.terrain * 0.55) || 22;
+            if (simPore) simPore.value = 6.0;
+            if (simVib) simVib.value = 0.004;
 
             updateSliderLabels();
             updateUIAll();
@@ -354,20 +366,28 @@ function updateSliderLabels() {
     const simRain = getElement("simRainfall");
     const simSoil = getElement("simSoil");
     const simSlope = getElement("simSlope");
+    const simPore = getElement("simPorePress");
+    const simVib = getElement("simVibration");
 
     const rainVal = getElement("simRainfallVal");
     const soilVal = getElement("simSoilVal");
     const slopeVal = getElement("simSlopeVal");
+    const poreVal = getElement("simPorePressVal");
+    const vibVal = getElement("simVibrationVal");
 
     if (rainVal && simRain) rainVal.textContent = `${simRain.value} mm`;
     if (soilVal && simSoil) soilVal.textContent = `${simSoil.value}%`;
     if (slopeVal && simSlope) slopeVal.textContent = `${simSlope.value}°`;
+    if (poreVal && simPore) poreVal.textContent = `${parseFloat(simPore.value).toFixed(1)} kPa`;
+    if (vibVal && simVib) vibVal.textContent = `${parseFloat(simVib.value).toFixed(3)} g`;
 }
 
 async function runSimulation() {
     const simRain = getElement("simRainfall");
     const simSoil = getElement("simSoil");
     const simSlope = getElement("simSlope");
+    const simPore = getElement("simPorePress");
+    const simVib = getElement("simVibration");
     const btnSim = getElement("btnRunSimulation");
 
     if (!simRain || !simSoil || !simSlope) return;
@@ -380,6 +400,8 @@ async function runSimulation() {
     const rainfall = parseFloat(simRain.value);
     const soil = parseFloat(simSoil.value);
     const slope = parseFloat(simSlope.value);
+    const pore = simPore ? parseFloat(simPore.value) : 6.0;
+    const vib = simVib ? parseFloat(simVib.value) : 0.004;
 
     const city = probabilityData.city || "Guwahati";
     const geo = CITY_COORDINATES[city] || CITY_COORDINATES["Guwahati"];
@@ -393,21 +415,27 @@ async function runSimulation() {
                 district: geo.district,
                 rainfall_24h_mm: rainfall,
                 soil_moisture_pct: soil,
-                slope_angle_deg: slope
+                slope_angle_deg: slope,
+                pore_pressure_kpa: pore,
+                ground_vibration_g: vib
             });
 
             if (res && res.prediction) {
                 const pred = res.prediction;
-                probabilityData.overall = Math.round(pred.risk_score);
-                probabilityData.landslide = Math.round(pred.landslide_risk_pct || pred.risk_score);
-                probabilityData.flood = Math.round(pred.flood_risk_pct || (pred.risk_score * 0.7));
-                probabilityData.level = pred.risk_level;
+                const fusedScore = (res.fusion && typeof res.fusion.fused_risk_score === 'number')
+                    ? Math.round(res.fusion.fused_risk_score * 100)
+                    : Math.round(pred.risk_score);
+
+                probabilityData.overall = fusedScore;
+                probabilityData.landslide = Math.round(pred.landslide_risk_pct || fusedScore);
+                probabilityData.flood = Math.round(pred.flood_risk_pct || (fusedScore * 0.7));
+                probabilityData.level = (res.fusion && res.fusion.risk_tier) ? res.fusion.risk_tier : pred.risk_level;
 
                 if (pred.factors) {
                     probabilityData.factors.rainfall = pred.factors.rainfall || Math.min(100, Math.round(rainfall / 2.5));
                     probabilityData.factors.soil = pred.factors.soil || Math.round(soil);
                     probabilityData.factors.terrain = pred.factors.slope || Math.round(slope * 1.5);
-                    probabilityData.factors.water = pred.factors.water || 55;
+                    probabilityData.factors.water = pred.factors.water || Math.min(100, Math.round(pore * 2.5));
                 }
 
                 // Update trend with simulated score
@@ -430,8 +458,8 @@ async function runSimulation() {
 
                 if (window.LandSafeAPI && window.LandSafeAPI.showToast) {
                     window.LandSafeAPI.showToast(
-                        `Simulation Result: ML Model predicts ${probabilityData.overall}% risk (${probabilityData.level})`,
-                        probabilityData.overall >= 60 ? "danger" : "success"
+                        `Simulation Result: Multi-Modal Risk predicts ${probabilityData.overall}% (${probabilityData.level})`,
+                        probabilityData.overall >= 60 ? "danger" : probabilityData.overall >= 35 ? "warning" : "success"
                     );
                 }
             }
@@ -466,10 +494,14 @@ function setupEventListeners() {
     const simRain = getElement("simRainfall");
     const simSoil = getElement("simSoil");
     const simSlope = getElement("simSlope");
+    const simPore = getElement("simPorePress");
+    const simVib = getElement("simVibration");
 
-    if (simRain) simRain.addEventListener("input", updateSliderLabels);
-    if (simSoil) simSoil.addEventListener("input", updateSliderLabels);
-    if (simSlope) simSlope.addEventListener("input", updateSliderLabels);
+    if (simRain) simRain.addEventListener("input", () => { updateSliderLabels(); updateFactorBars(); });
+    if (simSoil) simSoil.addEventListener("input", () => { updateSliderLabels(); updateFactorBars(); });
+    if (simSlope) simSlope.addEventListener("input", () => { updateSliderLabels(); updateFactorBars(); });
+    if (simPore) simPore.addEventListener("input", () => { updateSliderLabels(); updateFactorBars(); });
+    if (simVib) simVib.addEventListener("input", () => { updateSliderLabels(); updateFactorBars(); });
 
     const btnSim = getElement("btnRunSimulation");
     if (btnSim) {
@@ -486,7 +518,7 @@ function setupEventListeners() {
     }
 
     // Preset Scenario Handlers (6 Core Environmental Scenarios)
-    function activatePreset(id, rain, soil, slope) {
+    function activatePreset(id, rain, soil, slope, pore, vib) {
         document.querySelectorAll(".scenario-card").forEach(c => c.classList.remove("active"));
         const card = getElement(id);
         if (card) card.classList.add("active");
@@ -494,23 +526,26 @@ function setupEventListeners() {
         if (simRain) simRain.value = rain;
         if (simSoil) simSoil.value = soil;
         if (simSlope) simSlope.value = slope;
+        if (simPore) simPore.value = pore;
+        if (simVib) simVib.value = vib;
         updateSliderLabels();
+        updateFactorBars();
         runSimulation();
     }
 
     const presetMap = [
-        { id: "presetNormal", rain: 15, soil: 35, slope: 22 },
-        { id: "presetMonsoon", rain: 260, soil: 94, slope: 42 },
-        { id: "presetMoisture", rain: 90, soil: 92, slope: 30 },
-        { id: "presetPorePress", rain: 160, soil: 88, slope: 38 },
-        { id: "presetVibration", rain: 50, soil: 62, slope: 45 },
-        { id: "presetCombined", rain: 280, soil: 98, slope: 48 }
+        { id: "presetNormal", rain: 10, soil: 30, slope: 15, pore: 3.0, vib: 0.003 },
+        { id: "presetMoisture", rain: 28, soil: 32, slope: 22, pore: 6.0, vib: 0.004 },
+        { id: "presetMonsoon", rain: 35, soil: 38, slope: 26, pore: 8.0, vib: 0.005 },
+        { id: "presetPorePress", rain: 25, soil: 35, slope: 20, pore: 29.5, vib: 0.004 },
+        { id: "presetVibration", rain: 20, soil: 32, slope: 20, pore: 5.0, vib: 1.6 },
+        { id: "presetCombined", rain: 180, soil: 92, slope: 42, pore: 38.0, vib: 0.08 }
     ];
 
     presetMap.forEach(p => {
         const btn = getElement(p.id);
         if (btn) {
-            btn.addEventListener("click", () => activatePreset(p.id, p.rain, p.soil, p.slope));
+            btn.addEventListener("click", () => activatePreset(p.id, p.rain, p.soil, p.slope, p.pore, p.vib));
         }
     });
 
@@ -590,6 +625,12 @@ function updateFusionUI(fusion) {
         if (actEl) actEl.textContent = `${spatial.active_model || 'LightGBM'} Pipeline`;
         if (agrEl) agrEl.textContent = `${spatial.ensemble_agreement_pct ?? 97}`;
 
+        const spatScore = getElement("spatialStreamScore");
+        if (spatScore) {
+            const val = typeof spatial.raw_risk_score === 'number' ? spatial.raw_risk_score : Math.round((spatial.score || 0) * 100);
+            spatScore.textContent = `${val}%`;
+        }
+
         const shapList = getElement("fusionShapList");
         if (shapList && Array.isArray(spatial.top_shap_factors) && spatial.top_shap_factors.length > 0) {
             shapList.innerHTML = spatial.top_shap_factors.slice(0, 3).map(f => {
@@ -611,7 +652,12 @@ function updateFusionUI(fusion) {
             }`;
         }
         if (suffEl) {
-            suffEl.textContent = temporal.data_sufficiency ? "SUFFICIENT (3/3 windows)" : "PARTIAL / INSUFFICIENT";
+            suffEl.textContent = temporal.data_sufficiency === "SUFFICIENT" ? "SUFFICIENT (3/3 windows)" : (temporal.data_sufficiency || "SYNTHESIZED / SUFFICIENT");
+        }
+        const tempScore = getElement("temporalStreamScore");
+        if (tempScore) {
+            const val = typeof temporal.raw_temporal_score === 'number' ? Math.round(temporal.raw_temporal_score) : Math.round((temporal.score || 0) * 100);
+            tempScore.textContent = `${val}%`;
         }
     }
 

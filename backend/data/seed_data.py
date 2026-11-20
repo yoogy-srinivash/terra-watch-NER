@@ -315,6 +315,33 @@ def seed_database():
             db.add_all(tasks)
             db.commit()
 
+        # 11. RISK PREDICTIONS (32 Monitored Stations baseline)
+        if db.query(RiskPrediction).count() == 0:
+            print("Seeding Initial Risk Predictions for 32 Stations...")
+            from ..app.services.ml_service import ml_engine
+            locations = db.query(Location).all()
+            for loc in locations:
+                pred = ml_engine.predict({
+                    "latitude": loc.latitude, "longitude": loc.longitude,
+                    "state": loc.state, "district": loc.district, "name": loc.name, "location_id": loc.id
+                })
+                rp = RiskPrediction(
+                    location_id=loc.id,
+                    risk_score=pred["risk_score"],
+                    risk_probability=pred["risk_probability"],
+                    risk_level=pred["risk_level"],
+                    landslide_risk_pct=pred["landslide_risk_pct"],
+                    flood_risk_pct=pred["flood_risk_pct"],
+                    rainfall_factor_pct=pred["factors"]["rainfall"],
+                    soil_factor_pct=pred["factors"]["soil"],
+                    slope_factor_pct=pred["factors"]["slope"],
+                    water_factor_pct=pred["factors"]["water"],
+                    predicted_at=datetime.utcnow()
+                )
+                db.add(rp)
+            db.commit()
+            print(f"Added {len(locations)} RiskPrediction records.")
+
         print("Database Seeding Completed Successfully!")
     except Exception as e:
         db.rollback()

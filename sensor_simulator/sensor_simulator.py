@@ -207,6 +207,7 @@ def generate_scenario_reading(
         "temperature": temp,
         "pore_pressure": pore_p,
         "ground_vibration": vib,
+        "rainfall_1h": rainfall_1h,
         "battery_level": 95,
         "signal_strength": -65,
         "is_simulated": True,
@@ -271,24 +272,24 @@ def flush_buffer(url: str):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="LandSafe Academic Scenario-Based IoT Telemetry Simulator (IMDAI Prototype)"
+        description="TerraWatch NER - Academic Scenario-Based IoT Telemetry Simulator (IMDAI Prototype)"
     )
     parser.add_argument("--backend-url", default="http://localhost:8000", help="FastAPI backend URL")
     parser.add_argument("--interval", type=int, default=5, help="Seconds between telemetry rounds")
-    parser.add_argument("--iterations", type=int, default=3, help="Telemetry iterations (0 = infinite)")
+    parser.add_argument("--iterations", type=int, default=0, help="Telemetry iterations (0 = infinite)")
     parser.add_argument(
         "--scenario",
         choices=["normal", "rainfall", "moisture", "pore_pressure", "vibration", "deterioration", "override"],
         default="normal",
         help="Deterministic demonstration scenario to simulate"
     )
-    parser.add_argument("--station", default="SN-ML-001", help="Target station ID to apply scenario trajectory")
+    parser.add_argument("--station", "--hazard-station", dest="station", default="SN-ML-001", help="Target station ID to apply scenario trajectory")
     parser.add_argument("--offline-demo", action="store_true", help="Simulate offline buffering and flush")
 
     args = parser.parse_args()
 
     print("================================================================================")
-    print("   LANDSAFE CONNECT - ACADEMIC IOT TELEMETRY SIMULATOR (IMDAI COURSE)          ")
+    print("   TERRAWATCH NER - ACADEMIC IOT TELEMETRY SIMULATOR (IMDAI COURSE)             ")
     print("   Scientific Disclosure: All data is SYNTHETIC (Category C: Demo Heuristic)    ")
     print("================================================================================")
     print(f"Backend Target: {args.backend_url}")

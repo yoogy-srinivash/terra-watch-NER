@@ -15,6 +15,26 @@ router = APIRouter(prefix="/api/risk", tags=["Landslide Risk Assessment"])
 @router.post("/predict")
 def predict_risk(req: PredictionRequest, db: Session = Depends(get_db)):
     pred = ml_engine.predict(req.dict())
+
+    # Build simulated temporal scenario telemetry if geotechnical sensor parameters supplied
+    temporal_analysis = None
+    if req.pore_pressure_kpa is not None or req.ground_vibration_g is not None:
+        p_val = req.pore_pressure_kpa or 0.0
+        v_val = req.ground_vibration_g or 0.0
+        sm_val = req.soil_moisture_pct or 50.0
+        rf_val = req.rainfall_24h_mm or 0.0
+
+        temporal_analysis = {
+            "data_sufficiency": "SUFFICIENT",
+            "trend": "RISING" if p_val > 15 or rf_val > 40 else "STABLE",
+            "temporal_risk_score": min(100.0, max(0.0, (p_val * 2.2) + (rf_val * 0.4))),
+            "sensor_factors": {
+                "pore_pressure": {"current": p_val, "rate_per_hr": 1.5 if p_val > 15 else 0.1},
+                "vibration": {"current": v_val, "anomaly_ratio": 4.5 if v_val > 0.05 else 1.0},
+                "soil_moisture": {"current": sm_val, "rate_per_hr": 1.2 if rf_val > 30 else 0.2}
+            }
+        }
+
     fused = fusion_engine.fuse_evidence(
         spatial_pred=pred,
         location_meta={
@@ -22,7 +42,8 @@ def predict_risk(req: PredictionRequest, db: Session = Depends(get_db)):
             "longitude": req.longitude,
             "state": req.state,
             "district": req.district
-        }
+        },
+        temporal_analysis=temporal_analysis
     )
     return {
         "status": "success",

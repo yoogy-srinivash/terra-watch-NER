@@ -49,7 +49,7 @@ set /p run_sim="Start IoT Sensor Simulator? (Y/N, default Y): "
 if "%run_sim%"=="" set run_sim=Y
 if /i "%run_sim%"=="Y" (
     echo Starting IoT Sensor Simulator...
-    start "TerraWatch IoT Simulator" cmd /k ".\venv\Scripts\python.exe sensor_simulator/sensor_simulator.py --backend-url http://localhost:8000 --interval 5"
+    start "TerraWatch IoT Simulator" cmd /k ".\venv\Scripts\python.exe sensor_simulator/sensor_simulator.py --backend-url http://localhost:8000 --interval 5 --iterations 0"
 )
 
 echo.
