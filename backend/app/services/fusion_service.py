@@ -474,6 +474,11 @@ class RiskFusionEngine:
                 "triggered": has_override,
                 "rules": overrides_triggered
             },
+            "tft_advisory": {
+                "enabled": False,
+                "mode": "ADVISORY_INDEPENDENT",
+                "notice": "TFT multi-horizon forecasts operate independently and do not alter operational safety tiers."
+            },
             "confidence_status": confidence_status,
             "explanation": explanations,
             "decision_basis": decision_basis

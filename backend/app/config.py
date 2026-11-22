@@ -27,7 +27,9 @@ class Settings(BaseSettings):
 
     # Models & Data
     MODELS_DIR: str = str(BASE_DIR / "models")
+    TFT_DIR: str = str(BASE_DIR / "models" / "tft")
     DATA_DIR: str = str(BASE_DIR / "data")
+    ENABLE_TFT_FUSION: bool = False
 
     # External APIs
     WEATHER_API_URL: str = "https://api.open-meteo.com/v1/forecast"

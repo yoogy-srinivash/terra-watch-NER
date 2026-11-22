@@ -1,0 +1,84 @@
+{
+  "model_name": "Temporal Fusion Transformer (TFT)",
+  "framework": "PyTorch Native TFT (Canonical Lim et al., 2021)",
+  "device": "cpu",
+  "parameters_count": 97704,
+  "trained_at": "2026-11-22 11:48:20 UTC",
+  "training_time_seconds": 108.02,
+  "best_epoch": 9,
+  "best_val_loss": 0.0419,
+  "evaluation_metrics": {
+    "tft": {
+      "soil_moisture_mae": {
+        "1h": 1.088,
+        "6h": 1.519,
+        "24h": 2.191
+      },
+      "soil_moisture_rmse": {
+        "1h": 2.261,
+        "6h": 4.059,
+        "24h": 4.327
+      },
+      "pore_pressure_mae": {
+        "1h": 0.797,
+        "6h": 1.155,
+        "24h": 2.567
+      },
+      "pore_pressure_rmse": {
+        "1h": 1.775,
+        "6h": 3.453,
+        "24h": 5.705
+      }
+    },
+    "persistence_baseline": {
+      "soil_moisture_mae": {
+        "1h": 1.441,
+        "6h": 7.732,
+        "24h": 19.783
+      },
+      "soil_moisture_rmse": {
+        "1h": 3.097,
+        "6h": 13.514,
+        "24h": 25.742
+      },
+      "pore_pressure_mae": {
+        "1h": 1.072,
+        "6h": 6.499,
+        "24h": 25.612
+      },
+      "pore_pressure_rmse": {
+        "1h": 3.131,
+        "6h": 12.622,
+        "24h": 30.98
+      }
+    },
+    "moving_average_baseline": {
+      "soil_moisture_mae": {
+        "1h": 10.387,
+        "6h": 13.365,
+        "24h": 19.937
+      },
+      "pore_pressure_mae": {
+        "1h": 11.316,
+        "6h": 16.018,
+        "24h": 27.455
+      }
+    }
+  },
+  "forecast_horizons": [
+    "1h",
+    "6h",
+    "24h"
+  ],
+  "target_variables": [
+    "soil_moisture_pct",
+    "pore_pressure_kpa"
+  ],
+  "quantiles": [
+    0.1,
+    0.5,
+    0.9
+  ],
+  "provenance_category": "Category C (Simulation-Based Academic Advisory Model)",
+  "scientific_integrity_notice": "Model trained on calibrated regional telemetry sequences. Operates strictly in Advisory Mode. Does NOT modify operational life-safety risk tiers or LightGBM spatial susceptibility predictions."
+}

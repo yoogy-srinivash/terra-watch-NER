@@ -448,6 +448,110 @@
                 </div>
             </div>
 
+            <!-- =========================================================
+                 SECTION: TEMPORAL FUSION TRANSFORMER (TFT) FORECASTING
+            ========================================================== -->
+            <div class="card border rounded-3 p-4 bg-white mb-4 shadow-sm" id="tftSection">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 pb-3 border-bottom">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="p-2 bg-primary-subtle text-primary rounded-2 fs-5"><i class="bi bi-clock-history"></i></span>
+                            <h5 class="fw-bold mb-0 text-dark">Temporal Fusion Transformer (TFT) — Subsurface Forecasting</h5>
+                            <span class="badge bg-success-subtle text-success border border-success" id="tftStatusBadge">PyTorch TFT Active</span>
+                        </div>
+                        <p class="text-secondary small mb-0">Multi-horizon predictive trajectory for Soil Moisture Saturation &amp; Pore Water Pressure. Operates in independent advisory mode.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-secondary border px-2 py-1 small">
+                            <i class="bi bi-info-circle me-1"></i> Category C Advisory
+                        </span>
+                        <button id="btnRefreshTFT" class="btn btn-sm btn-outline-secondary" type="button" title="Refresh Forecast">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small fw-semibold text-secondary mb-1">Monitoring Station</label>
+                        <select class="form-select form-select-sm" id="tftStationSelect">
+                            <option value="SN-AS-001" selected>Guwahati Slope Station (Assam)</option>
+                            <option value="SN-ML-001">Shillong Ridge Node (Meghalaya)</option>
+                            <option value="SN-MZ-001">Aizawl Hill Crest Station (Mizoram)</option>
+                            <option value="SN-SK-001">Gangtok Mountain Node (Sikkim)</option>
+                            <option value="SN-AR-001">Itanagar Foot-hill Node (Arunachal Pradesh)</option>
+                            <option value="SN-NL-001">Kohima Ridge Node (Nagaland)</option>
+                            <option value="SN-MN-001">Imphal Valley Station (Manipur)</option>
+                            <option value="SN-TR-001">Agartala Basin Node (Tripura)</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small fw-semibold text-secondary mb-1">Forecast Horizon</label>
+                        <div class="btn-group btn-group-sm w-100" role="group">
+                            <button type="button" class="btn btn-outline-secondary tft-horizon-btn" data-horizon="1h">1 Hour</button>
+                            <button type="button" class="btn btn-outline-secondary tft-horizon-btn" data-horizon="6h">6 Hours</button>
+                            <button type="button" class="btn btn-primary active tft-horizon-btn" data-horizon="24h">24 Hours</button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small fw-semibold text-secondary mb-1">Target Trajectory</label>
+                        <div class="d-flex gap-3 align-items-center mt-1">
+                            <div class="form-check form-check-inline mb-0">
+                                <input class="form-check-input" type="radio" name="tftMetricToggle" id="metricMoisture" value="moisture" checked>
+                                <label class="form-check-label small fw-semibold" for="metricMoisture">Soil Moisture (%)</label>
+                            </div>
+                            <div class="form-check form-check-inline mb-0">
+                                <input class="form-check-input" type="radio" name="tftMetricToggle" id="metricPore" value="pore_pressure">
+                                <label class="form-check-label small fw-semibold" for="metricPore">Pore Pressure (kPa)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="row g-3 mb-3">
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="text-secondary small">Selected Horizon</div>
+                            <div class="fw-bold text-dark" id="kpiTftHorizonLabel">24 Hours Forward Horizon</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="text-secondary small">Forecast Soil Moisture</div>
+                            <div class="fw-bold text-primary" id="kpiTftMoisture">--%</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="text-secondary small">Forecast Pore Pressure</div>
+                            <div class="fw-bold text-warning" id="kpiTftPorePressure">-- kPa</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="text-secondary small">CPU Inference Latency</div>
+                            <div class="fw-bold text-success" id="kpiTftLatency">-- ms</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Canvas Container -->
+                <div class="position-relative" style="height: 280px;">
+                    <div id="tftLoadingSpinner" class="position-absolute top-50 start-50 translate-middle d-none text-center">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <div class="small text-muted mt-1">Evaluating TFT sequence...</div>
+                    </div>
+                    <canvas id="tftForecastChart"></canvas>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top small text-muted">
+                    <span><i class="bi bi-shield-check text-success me-1"></i> Solid line = Past Observed; Dashed line = TFT Forecast (p50); Shaded ribbon = 10th–90th Percentile Confidence Bound.</span>
+                    <span>Offline trained model (97.7k params)</span>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -502,5 +606,7 @@
     <script src="offline-sync.js"></script>
     <!-- Probability Risk JS -->
     <script src="probability-risk.js"></script>
+    <!-- Temporal Fusion Transformer (TFT) JS -->
+    <script src="tft-forecasting.js"></script>
 </body>
 </html>

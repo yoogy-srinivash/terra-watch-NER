@@ -18,7 +18,7 @@ from backend.app.database import engine, Base, SessionLocal
 from backend.app.services.ml_service import ml_service
 from backend.app.routers import (
     auth, risk, gis, sensors, reports, alerts,
-    emergency, roads, weather, analytics, sync, admin
+    emergency, roads, weather, analytics, sync, admin, forecasting
 )
 
 @asynccontextmanager
@@ -75,6 +75,7 @@ app.include_router(weather.router)
 app.include_router(analytics.router)
 app.include_router(sync.router)
 app.include_router(admin.router)
+app.include_router(forecasting.router)
 
 # Mount Uploads
 if os.path.exists(settings.UPLOAD_DIR):

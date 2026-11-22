@@ -1,0 +1,46 @@
+{
+  "soil_moisture": {
+    "mean": 46.58408630952381,
+    "std": 14.428059274112895
+  },
+  "pore_pressure": {
+    "mean": 16.574900297619045,
+    "std": 17.640062810115307
+  },
+  "temperature": {
+    "mean": 23.34730654761905,
+    "std": 4.203602860966635
+  },
+  "ground_vibration": {
+    "mean": 0.02449965773809524,
+    "std": 0.006081585384399031
+  },
+  "elevation_m": {
+    "mean": 930.5,
+    "std": 542.5915225574785
+  },
+  "slope_angle_deg": {
+    "mean": 27.125,
+    "std": 7.865658372582155
+  },
+  "sensor_map": {
+    "SN-AR-001": 0,
+    "SN-AS-001": 1,
+    "SN-ML-001": 2,
+    "SN-MN-001": 3,
+    "SN-MZ-001": 4,
+    "SN-NL-001": 5,
+    "SN-SK-001": 6,
+    "SN-TR-001": 7
+  },
+  "state_map": {
+    "Arunachal Pradesh": 0,
+    "Assam": 1,
+    "Manipur": 2,
+    "Meghalaya": 3,
+    "Mizoram": 4,
+    "Nagaland": 5,
+    "Sikkim": 6,
+    "Tripura": 7
+  }
+}
