@@ -114,10 +114,11 @@
             sirenLocationLabel.textContent = `Target: ${targetLoc}`;
         }
 
+        const api = window.TerraWatchAPI || window.LandSafeAPI;
         if (!isSirenActive) {
             try {
-                if (window.LandSafeAPI && typeof window.LandSafeAPI.triggerSiren === "function") {
-                    await window.LandSafeAPI.triggerSiren(targetLoc, 60);
+                if (api && typeof api.triggerSiren === "function") {
+                    await api.triggerSiren(targetLoc, 60);
                 } else {
                     await fetch(`/api/alerts/sirens/trigger?location=${encodeURIComponent(targetLoc)}&duration_seconds=60`, { method: "POST" });
                 }
@@ -133,8 +134,8 @@
                 });
         } else {
             try {
-                if (window.LandSafeAPI && typeof window.LandSafeAPI.stopSiren === "function") {
-                    await window.LandSafeAPI.stopSiren();
+                if (api && typeof api.stopSiren === "function") {
+                    await api.stopSiren();
                 } else {
                     await fetch("/api/alerts/sirens/stop", { method: "POST" });
                 }
@@ -159,8 +160,9 @@
     async function loadKPIMetrics() {
         try {
             let dash = null;
-            if (window.LandSafeAPI && typeof window.LandSafeAPI.getAdminDashboard === "function") {
-                dash = await window.LandSafeAPI.getAdminDashboard();
+            const api = window.TerraWatchAPI || window.LandSafeAPI;
+            if (api && typeof api.getAdminDashboard === "function") {
+                dash = await api.getAdminDashboard();
             } else {
                 const res = await fetch("/api/admin/dashboard");
                 if (res.ok) dash = await res.json();
@@ -210,15 +212,16 @@
             if (Array.isArray(sensors) && sensors.length > 0) {
                 displayList = sensors.map(s => {
                     const r = s.last_reading || {};
+                    const fallbackNode = DEFAULT_SENSOR_NODES.find(n => n.id === s.id) || {};
                     return {
                         id: s.id,
                         name: s.name,
-                        state: s.state || "NER",
-                        soil_moisture: r.soil_moisture !== undefined ? r.soil_moisture : (60 + Math.random() * 25).toFixed(1),
-                        pore_pressure: r.pore_pressure !== undefined ? r.pore_pressure : (8 + Math.random() * 10).toFixed(1),
-                        ground_vibration: r.ground_vibration !== undefined ? r.ground_vibration : (0.02 + Math.random() * 0.08).toFixed(2),
-                        battery_pct: s.battery_pct || 90,
-                        status: s.status || "Active"
+                        state: s.state || fallbackNode.state || "NER",
+                        soil_moisture: r.soil_moisture !== undefined ? r.soil_moisture : (fallbackNode.soil_moisture !== undefined ? fallbackNode.soil_moisture : 35.0),
+                        pore_pressure: r.pore_pressure !== undefined ? r.pore_pressure : (fallbackNode.pore_pressure !== undefined ? fallbackNode.pore_pressure : 4.5),
+                        ground_vibration: r.ground_vibration !== undefined ? r.ground_vibration : (fallbackNode.ground_vibration !== undefined ? fallbackNode.ground_vibration : 0.03),
+                        battery_pct: s.battery_pct || fallbackNode.battery_pct || 95,
+                        status: s.status || fallbackNode.status || "Active"
                     };
                 });
             } else {

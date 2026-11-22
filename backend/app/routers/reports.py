@@ -55,9 +55,9 @@ async def submit_field_report(
     photo: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
-    # Unique sequential/random report ID format matching UI: LS-2026-XXXXX
+    # Unique sequential/random report ID format matching UI: TW-2026-XXXXX
     rand_num = int(uuid.uuid4().int % 90000) + 10000
-    report_id = f"LS-2026-{rand_num}"
+    report_id = f"TW-2026-{rand_num}"
 
     media_path = None
     evidence_desc = "No evidence uploaded"

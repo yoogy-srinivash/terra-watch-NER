@@ -19,7 +19,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(120), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    first_name = Column(String(60), default="LandSafe")
+    first_name = Column(String(60), default="TerraWatch")
     last_name = Column(String(60), default="User")
     phone = Column(String(20), nullable=True)
     role = Column(String(50), default="CITIZEN")  # ADMIN, CITIZEN, DISASTER_OFFICIAL, FIELD_OFFICER

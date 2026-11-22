@@ -364,8 +364,9 @@
 
             try {
                 let res = null;
-                if (window.LandSafeAPI && typeof window.LandSafeAPI.submitReport === "function") {
-                    res = await window.LandSafeAPI.submitReport(formData);
+                const api = window.TerraWatchAPI || window.LandSafeAPI;
+                if (api && typeof api.submitReport === "function") {
+                    res = await api.submitReport(formData);
                 } else {
                     const fetchRes = await fetch("/api/reports", {
                         method: "POST",
@@ -401,8 +402,9 @@
             } catch (err) {
                 console.warn("[Report] Submission error or offline fallback:", err);
 
-                // Safe Offline queue via LandSafeSync
-                if (window.LandSafeSync) {
+                // Safe Offline queue via TerraWatchSync
+                const sync = window.TerraWatchSync || window.LandSafeSync;
+                if (sync) {
                     const fallbackItem = {
                         issue_type: issueType,
                         severity: severity,
@@ -412,7 +414,7 @@
                         description: desc,
                         is_emergency: emergency
                     };
-                    const queued = window.LandSafeSync.enqueueItem("report", fallbackItem);
+                    const queued = sync.enqueueItem("report", fallbackItem);
                     
                     if (repIdBadge) repIdBadge.textContent = queued.local_id;
                     if (repStatusBadge) {
@@ -539,8 +541,9 @@
 
         try {
             let reports = [];
-            if (window.LandSafeAPI && typeof window.LandSafeAPI.getReports === "function") {
-                reports = await window.LandSafeAPI.getReports();
+            const api = window.TerraWatchAPI || window.LandSafeAPI;
+            if (api && typeof api.getReports === "function") {
+                reports = await api.getReports();
             } else {
                 const res = await fetch("/api/reports");
                 if (res.ok) {

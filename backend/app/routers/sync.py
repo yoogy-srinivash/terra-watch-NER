@@ -182,7 +182,7 @@ def pull_offline_cache(db: Session = Depends(get_db)):
             {"service": "NDRF Disaster Helpline", "phone": "1078"},
             {"service": "NER State Disaster Management Authority", "phone": "1070"},
             {"service": "Emergency Police / Fire / Ambulance", "phone": "112"},
-            {"service": "LandSafe Emergency Dispatch Room", "phone": "1800-345-5263"}
+            {"service": "TerraWatch Emergency Dispatch Room", "phone": "1800-345-5263"}
         ]
     }
 

@@ -447,20 +447,10 @@ function normalizeLocation(location) {
 async function loadRiskLocations() {
     try {
         let locations = null;
-
-        // 1. Try static JSON first for zero-latency load
-        try {
-            const resp = await fetch("/gis/locations.json");
-            if (resp.ok) {
-                locations = await resp.json();
-            }
-        } catch (e) {
-            console.warn("[LiveMap] Static locations.json fetch fallback:", e.message);
-        }
-
-        // 2. Fallback to API GeoJSON
         const api = window.TerraWatchAPI || window.LandSafeAPI;
-        if (!locations && api) {
+
+        // 1. Prioritize live ML Risk API GeoJSON from FastAPI backend
+        if (api && typeof api.getLocationsGeoJSON === "function") {
             try {
                 const geojson = await api.getLocationsGeoJSON();
                 if (geojson && geojson.features && geojson.features.length > 0) {
@@ -474,13 +464,28 @@ async function loadRiskLocations() {
                         population_exposed: f.properties.population_exposed,
                         roads_exposed: f.properties.roads_exposed,
                         critical_assets: f.properties.critical_assets,
-                        risk: f.properties.risk || f.properties.risk_score,
+                        risk: f.properties.risk !== undefined ? f.properties.risk : f.properties.risk_score,
                         riskLevel: f.properties.riskLevel || f.properties.risk_level,
-                        rainfall: f.properties.rainfall_24h_mm || 45
+                        rainfall: f.properties.rainfall || f.properties.rainfall_24h_mm || 45,
+                        factors: f.properties.factors,
+                        contributing_factors: f.properties.contributing_factors,
+                        recommendations: f.properties.recommendations
                     }));
                 }
             } catch (e) {
-                console.warn("[LiveMap] API GeoJSON fallback:", e.message);
+                console.warn("[LiveMap] Live API GeoJSON fetch failed, falling back to static offline data:", e.message);
+            }
+        }
+
+        // 2. Fallback to static JSON if offline or backend is unreachable
+        if (!locations) {
+            try {
+                const resp = await fetch("/gis/locations.json");
+                if (resp.ok) {
+                    locations = await resp.json();
+                }
+            } catch (e) {
+                console.warn("[LiveMap] Static locations.json fetch fallback error:", e.message);
             }
         }
 

@@ -276,7 +276,7 @@ def seed_database():
             db.add_all(roads)
             db.commit()
 
-        # 8. ALERTS (matching existing ui/admin-alerts.js)
+        # 8. ALERTS (for Admin & Siren Operations)
         if db.query(Alert).count() == 0:
             print("Seeding Initial Active & Resolved Alerts...")
             alerts = [
@@ -291,7 +291,7 @@ def seed_database():
             db.add_all(alerts)
             db.commit()
 
-        # 9. FIELD REPORTS (matching ui/user-reports.js)
+        # 9. FIELD REPORTS (for Hazard Reports Portal)
         if db.query(FieldReport).count() == 0:
             print("Seeding Initial Field Reports...")
             reports = [
@@ -303,7 +303,7 @@ def seed_database():
             db.add_all(reports)
             db.commit()
 
-        # 10. EMERGENCY TASKS (matching ui/emergency-requests.js)
+        # 10. EMERGENCY TASKS (for Admin Triage Dispatch)
         if db.query(EmergencyTask).count() == 0:
             print("Seeding Emergency Rescue Tasks...")
             tasks = [

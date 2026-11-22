@@ -10,7 +10,7 @@ class UserLogin(BaseModel):
 class UserRegister(BaseModel):
     email: EmailStr
     password: str
-    first_name: str = "LandSafe"
+    first_name: str = "TerraWatch"
     last_name: str = "User"
     phone: Optional[str] = None
     role: str = "CITIZEN"

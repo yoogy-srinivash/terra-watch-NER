@@ -46,7 +46,10 @@ class Settings(BaseSettings):
     RISK_THRESHOLD_CRITICAL: float = 0.80
 
     class Config:
-        env_file = str(BASE_DIR / ".env")
+        env_file = (
+            str(Path(__file__).resolve().parent.parent.parent / ".env"),
+            str(BASE_DIR / ".env")
+        )
         env_file_encoding = "utf-8"
         extra = "ignore"
 

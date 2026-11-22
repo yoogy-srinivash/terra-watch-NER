@@ -110,7 +110,7 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
 @router.get("/monitor-locations")
 def get_monitor_locations(db: Session = Depends(get_db)):
     """
-    Returns location records formatted for `monitor-locations.js`:
+    Returns regional station records formatted for Diagnostics & Operations:
     [{ name: "Guwahati", state: "Assam", type: "Flood", score: 78, flood: 76, landslide: 54, risk: "High" }, ...]
     """
     locations = db.query(Location).all()

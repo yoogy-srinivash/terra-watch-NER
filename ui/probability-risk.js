@@ -289,11 +289,12 @@ async function fetchLocationRisk(city) {
 
     try {
         let res = null;
-        if (window.LandSafeAPI && typeof window.LandSafeAPI.getProbability === "function") {
-            res = await window.LandSafeAPI.getProbability(city);
+        const api = window.TerraWatchAPI || window.LandSafeAPI;
+        if (api && typeof api.getProbability === "function") {
+            res = await api.getProbability(city);
         }
-        if (!res && window.LandSafeAPI && typeof window.LandSafeAPI.getLiveRisk === "function") {
-            res = await window.LandSafeAPI.getLiveRisk(city);
+        if (!res && api && typeof api.getLiveRisk === "function") {
+            res = await api.getLiveRisk(city);
         }
 
         if (res) {
@@ -345,8 +346,8 @@ async function fetchLocationRisk(city) {
                 updateFusionUI(res.fusion);
             }
 
-            if (window.LandSafeAPI && window.LandSafeAPI.showToast) {
-                window.LandSafeAPI.showToast(
+            if (api && api.showToast) {
+                api.showToast(
                     `ML Risk assessment updated for ${probabilityData.location}: ${probabilityData.overall}% (${probabilityData.level})`,
                     probabilityData.overall >= 60 ? "warning" : "success"
                 );
@@ -405,10 +406,11 @@ async function runSimulation() {
 
     const city = probabilityData.city || "Guwahati";
     const geo = CITY_COORDINATES[city] || CITY_COORDINATES["Guwahati"];
+    const api = window.TerraWatchAPI || window.LandSafeAPI;
 
     try {
-        if (window.LandSafeAPI && typeof window.LandSafeAPI.predictRisk === "function") {
-            const res = await window.LandSafeAPI.predictRisk({
+        if (api && typeof api.predictRisk === "function") {
+            const res = await api.predictRisk({
                 latitude: geo.lat,
                 longitude: geo.lng,
                 state: geo.state,
@@ -456,8 +458,8 @@ async function runSimulation() {
                     updateFusionUI(res.fusion);
                 }
 
-                if (window.LandSafeAPI && window.LandSafeAPI.showToast) {
-                    window.LandSafeAPI.showToast(
+                if (api && api.showToast) {
+                    api.showToast(
                         `Simulation Result: Multi-Modal Risk predicts ${probabilityData.overall}% (${probabilityData.level})`,
                         probabilityData.overall >= 60 ? "danger" : probabilityData.overall >= 35 ? "warning" : "success"
                     );
@@ -552,20 +554,21 @@ function setupEventListeners() {
     const notifBtn = getElement("notificationButton");
     if (notifBtn) {
         notifBtn.addEventListener("click", async function() {
-            if (window.LandSafeAPI) {
+            const api = window.TerraWatchAPI || window.LandSafeAPI;
+            if (api) {
                 try {
-                    const alerts = await window.LandSafeAPI.getActiveAlerts();
+                    const alerts = await api.getActiveAlerts();
                     if (alerts && alerts.length > 0) {
                         const alertTitles = alerts.slice(0, 3).map(a => `• [${a.severity}] ${a.title || a.location}`).join('\n');
-                        if (window.LandSafeAPI.showToast) {
-                            window.LandSafeAPI.showToast(`Active Early Warning Alerts:\n${alertTitles}`, "warning");
+                        if (api.showToast) {
+                            api.showToast(`Active Early Warning Alerts:\n${alertTitles}`, "warning");
                         }
                         return;
                     }
                 } catch (e) {}
             }
-            if (window.LandSafeAPI && window.LandSafeAPI.showToast) {
-                window.LandSafeAPI.showToast("All landslide corridors normal. Continuous ML inference running.", "info");
+            if (api && api.showToast) {
+                api.showToast("All landslide corridors normal. Continuous ML inference running.", "info");
             }
         });
     }

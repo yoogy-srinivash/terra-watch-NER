@@ -74,7 +74,7 @@ def get_analytics_summary(db: Session = Depends(get_db)):
 @router.get("/locations")
 def get_analytics_locations(db: Session = Depends(get_db)):
     """
-    Returns location risk breakdown tailored for `risk-analytics.js`:
+    Returns location risk breakdown tailored for Risk Analytics & Diagnostics:
     [{ location: "Guwahati", state: "Assam", flood: 76, landslide: 54, overall: 78, level: "High", hazard: "Flood" }, ...]
     """
     locations = db.query(Location).all()
