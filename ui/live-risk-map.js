@@ -420,42 +420,84 @@ function calculateGeotechnicalBaselineRisk(loc) {
     return { score, level: cat.level, rain };
 }
 
+let activeStateFilter = "ALL";
+
 function normalizeLocation(location) {
     return {
         id: location.id,
-        name: location.location,
+        name: location.name || location.location || "Station",
         district: location.district,
         state: location.state,
-        lat: Number(location.latitude),
-        lng: Number(location.longitude),
+        lat: Number(location.latitude != null ? location.latitude : location.lat),
+        lng: Number(location.longitude != null ? location.longitude : location.lng),
         population_exposed: Number(location.population_exposed || 0),
         roads_exposed: Number(location.roads_exposed || 0),
         critical_assets: Number(location.critical_assets || 0),
         slope_angle_deg: location.slope_angle_deg != null ? location.slope_angle_deg : null,
         elevation_m: location.elevation_m != null ? location.elevation_m : null,
-        risk: null,
-        riskLevel: null,
-        rainfall: null,
+        risk: location.risk != null ? location.risk : null,
+        riskLevel: location.riskLevel || null,
+        rainfall: location.rainfall || null,
         status: "Monitoring Active"
     };
 }
 
+function processAndStoreLocations(locations) {
+    const ids = new Set();
+    riskLocations = locations.map(loc => {
+        if (!loc.id || ids.has(loc.id)) return null;
+        ids.add(loc.id);
+
+        const normalized = normalizeLocation(loc);
+        if (loc.risk != null) {
+            normalized.risk = loc.risk;
+            normalized.riskLevel = loc.riskLevel || getRiskCategory(loc.risk).level;
+            normalized.rainfall = loc.rainfall || 45;
+        } else {
+            const baseline = calculateGeotechnicalBaselineRisk(loc);
+            normalized.risk = baseline.score;
+            normalized.riskLevel = baseline.level;
+            normalized.rainfall = baseline.rain;
+        }
+
+        if (loc.factors) normalized.factors = loc.factors;
+        if (loc.contributing_factors) normalized.contributing_factors = loc.contributing_factors;
+        if (loc.recommendations) normalized.recommendations = loc.recommendations;
+        if (loc.slope_angle_deg != null) normalized.slope_angle_deg = loc.slope_angle_deg;
+        if (loc.elevation_m != null) normalized.elevation_m = loc.elevation_m;
+        return normalized;
+    }).filter(Boolean);
+}
+
 /* =========================================================
-   LOAD STATIONS DATA
+   LOAD STATIONS DATA (FAST TWO-STAGE INITIALIZATION)
 ========================================================= */
 
 async function loadRiskLocations() {
     try {
-        let locations = null;
-        const api = window.TerraWatchAPI || window.LandSafeAPI;
+        // STAGE 1: Instant local render (< 15ms)
+        try {
+            const resp = await fetch("/gis/locations.json");
+            if (resp.ok) {
+                const staticLocations = await resp.json();
+                if (Array.isArray(staticLocations) && staticLocations.length > 0) {
+                    processAndStoreLocations(staticLocations);
+                    filterByState(activeStateFilter);
+                    console.log(`[LiveMap] Fast initial render complete: ${riskLocations.length} stations active.`);
+                }
+            }
+        } catch (e) {
+            console.warn("[LiveMap] Fast static render fallback notice:", e.message);
+        }
 
-        // 1. Prioritize live ML Risk API GeoJSON from FastAPI backend
+        // STAGE 2: Asynchronous Live ML Risk GeoJSON enrichment from FastAPI
+        const api = window.TerraWatchAPI || window.LandSafeAPI;
         if (api && typeof api.getLocationsGeoJSON === "function") {
-            try {
-                const geojson = await api.getLocationsGeoJSON();
+            api.getLocationsGeoJSON().then(geojson => {
                 if (geojson && geojson.features && geojson.features.length > 0) {
-                    locations = geojson.features.map(f => ({
+                    const liveLocations = geojson.features.map(f => ({
                         id: f.properties.id,
+                        name: f.properties.name,
                         location: f.properties.name,
                         district: f.properties.district,
                         state: f.properties.state,
@@ -471,58 +513,15 @@ async function loadRiskLocations() {
                         contributing_factors: f.properties.contributing_factors,
                         recommendations: f.properties.recommendations
                     }));
+
+                    processAndStoreLocations(liveLocations);
+                    filterByState(activeStateFilter);
+                    console.log(`[LiveMap] Merged live ML risk inference for ${riskLocations.length} stations.`);
                 }
-            } catch (e) {
-                console.warn("[LiveMap] Live API GeoJSON fetch failed, falling back to static offline data:", e.message);
-            }
+            }).catch(e => {
+                console.warn("[LiveMap] Live ML GeoJSON sync issue:", e.message);
+            });
         }
-
-        // 2. Fallback to static JSON if offline or backend is unreachable
-        if (!locations) {
-            try {
-                const resp = await fetch("/gis/locations.json");
-                if (resp.ok) {
-                    locations = await resp.json();
-                }
-            } catch (e) {
-                console.warn("[LiveMap] Static locations.json fetch fallback error:", e.message);
-            }
-        }
-
-        if (!Array.isArray(locations) || locations.length === 0) {
-            throw new Error("Could not load GIS stations array");
-        }
-
-        const ids = new Set();
-        riskLocations = locations.map(loc => {
-            if (!loc.id || ids.has(loc.id)) return null;
-            ids.add(loc.id);
-
-            const normalized = normalizeLocation(loc);
-            if (loc.risk != null) {
-                normalized.risk = loc.risk;
-                normalized.riskLevel = loc.riskLevel || getRiskCategory(loc.risk).level;
-                normalized.rainfall = loc.rainfall || 45;
-            } else {
-                const baseline = calculateGeotechnicalBaselineRisk(loc);
-                normalized.risk = baseline.score;
-                normalized.riskLevel = baseline.level;
-                normalized.rainfall = baseline.rain;
-            }
-
-            if (loc.slope_angle_deg != null) normalized.slope_angle_deg = loc.slope_angle_deg;
-            if (loc.elevation_m != null) normalized.elevation_m = loc.elevation_m;
-            return normalized;
-        }).filter(Boolean);
-
-        // Render all layers
-        renderStations(riskLocations);
-        renderShelters(shelters);
-        renderRescuePoints(rescuePoints);
-        renderEocPoints(emergencyOperationsCentres);
-        updateResourceCounts(riskLocations.length, shelters.length, rescuePoints.length, emergencyOperationsCentres.length);
-
-        console.log(`[LiveMap] Successfully loaded ${riskLocations.length} monitoring stations across NER.`);
     } catch (err) {
         console.error("[LiveMap] Error loading locations:", err);
     }
@@ -726,7 +725,7 @@ function showLocationDetails(location) {
                 <small class="text-secondary">${location.district ? location.district + ', ' : ''}${location.state} &bull; Station ID: <code>${location.id}</code></small>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <span class="badge ${cat.badgeClass} px-3 py-1 fs-6">${cat.level} RISK &bull; ${riskScore}/100</span>
+                <span class="badge ${cat.badgeClass} px-3 py-1 fs-6">${cat.level} RISK &bull; ${riskScore}%</span>
                 <button type="button" class="btn-close ms-1" onclick="closeStationDrawer()" aria-label="Close" title="Close Panel"></button>
             </div>
         </div>
@@ -788,6 +787,48 @@ function showLocationDetails(location) {
                 </div>
             </div>
 
+            <!-- 2B. TEMPORAL FUSION TRANSFORMER (TFT) FORECASTING SECTION -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px; font-size: 0.72rem;">
+                        <i class="bi bi-clock-history me-1" style="color: #6f42c1;"></i> TFT Subsurface Predictive Horizon
+                    </div>
+                    <span class="badge bg-purple-subtle text-purple border" style="font-size: 0.65rem; color: #6f42c1; border-color: #d8b4fe;">Advisory Layer</span>
+                </div>
+                <div class="card border rounded-2 p-2 bg-light mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom">
+                        <small class="fw-semibold text-dark"><i class="bi bi-cpu me-1"></i> Multi-Horizon PyTorch TFT</small>
+                        <span class="badge bg-success-subtle text-success" id="drawerTftStatus_${location.id}">Active (p50)</span>
+                    </div>
+                    <div class="row g-1 text-center" id="drawerTftForecastGrid_${location.id}">
+                        <div class="col-4">
+                            <div class="p-1 bg-white rounded border">
+                                <small class="text-muted d-block" style="font-size: 10px;">+1h Forecast</small>
+                                <span class="fw-bold text-primary small" id="drawerTft1h_${location.id}">--% / -- kPa</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-1 bg-white rounded border">
+                                <small class="text-muted d-block" style="font-size: 10px;">+6h Forecast</small>
+                                <span class="fw-bold text-warning small" id="drawerTft6h_${location.id}">--% / -- kPa</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-1 bg-white rounded border">
+                                <small class="text-muted d-block" style="font-size: 10px;">+24h Horizon</small>
+                                <span class="fw-bold text-danger small" id="drawerTft24h_${location.id}">--% / -- kPa</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="small text-muted mt-1 text-center" style="font-size: 10px;">
+                        Soil Moisture (%) &bull; Pore Pressure (kPa) &bull; Multi-quantile p50
+                    </div>
+                </div>
+                <a href="probability-risk.html?city=${encodeURIComponent(location.name)}#tftSection" class="btn btn-xs btn-outline-primary w-100 py-1" style="font-size: 0.78rem;">
+                    <i class="bi bi-graph-up me-1"></i> Open Full TFT Forecasting Workspace
+                </a>
+            </div>
+
             <!-- 3. ACTIONS -->
             <div class="mb-3">
                 <a href="probability-risk.html?city=${encodeURIComponent(location.name)}" class="btn btn-sm btn-primary w-100 py-2 fw-semibold">
@@ -809,6 +850,34 @@ function showLocationDetails(location) {
             </details>
         </div>
     `;
+
+    // Asynchronously fetch TFT multi-horizon forecast for this station
+    fetch(`/api/forecast/tft?station_id=${encodeURIComponent(location.id)}&horizon=24h`).then(r => r.json()).then(tftData => {
+        const horizons = tftData?.summary_horizons || tftData?.forecast_horizons;
+        if (horizons) {
+            const h1 = horizons["1h"];
+            const h6 = horizons["6h"];
+            const h24 = horizons["24h"];
+            const el1 = document.getElementById(`drawerTft1h_${location.id}`);
+            const el6 = document.getElementById(`drawerTft6h_${location.id}`);
+            const el24 = document.getElementById(`drawerTft24h_${location.id}`);
+            if (el1 && h1) {
+                const sm = h1.soil_moisture_p50 ?? h1.soil_moisture?.p50;
+                const pp = h1.pore_pressure_p50 ?? h1.pore_pressure?.p50;
+                el1.textContent = `${sm}% / ${pp} kPa`;
+            }
+            if (el6 && h6) {
+                const sm = h6.soil_moisture_p50 ?? h6.soil_moisture?.p50;
+                const pp = h6.pore_pressure_p50 ?? h6.pore_pressure?.p50;
+                el6.textContent = `${sm}% / ${pp} kPa`;
+            }
+            if (el24 && h24) {
+                const sm = h24.soil_moisture_p50 ?? h24.soil_moisture?.p50;
+                const pp = h24.pore_pressure_p50 ?? h24.pore_pressure?.p50;
+                el24.textContent = `${sm}% / ${pp} kPa`;
+            }
+        }
+    }).catch(() => {});
 
     // Asynchronously fetch live fusion & TreeSHAP attributions
     const apiForRisk = window.TerraWatchAPI || window.LandSafeAPI;
@@ -905,7 +974,10 @@ function updateResourceCounts(stationsCount, sheltersCount, rescueCount, eocCoun
 }
 
 function filterByState(selectedState) {
-    const stateNorm = (selectedState || "ALL").trim().toUpperCase();
+    if (selectedState !== undefined && selectedState !== null) {
+        activeStateFilter = selectedState;
+    }
+    const stateNorm = (activeStateFilter || "ALL").trim().toUpperCase();
 
     // 1. Filter stations
     const filteredStations = (stateNorm === "ALL")

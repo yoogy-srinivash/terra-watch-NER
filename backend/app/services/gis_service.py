@@ -1,9 +1,21 @@
-﻿from typing import Dict, Any, List
+﻿import time
+from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from ..models import Location, Infrastructure, Road, LandslideEvent, SensorDevice
 from .ml_service import ml_engine
 
-def get_locations_geojson(db: Session) -> Dict[str, Any]:
+# In-memory GeoJSON cache for the 32 monitoring stations
+_LOCATIONS_GEOJSON_CACHE: Optional[Dict[str, Any]] = None
+_LOCATIONS_GEOJSON_CACHE_TIME: float = 0.0
+_LOCATIONS_CACHE_TTL_SEC: float = 60.0  # 60 seconds
+
+def get_locations_geojson(db: Session, force_refresh: bool = False) -> Dict[str, Any]:
+    global _LOCATIONS_GEOJSON_CACHE, _LOCATIONS_GEOJSON_CACHE_TIME
+    now = time.time()
+    if not force_refresh and _LOCATIONS_GEOJSON_CACHE is not None:
+        if now - _LOCATIONS_GEOJSON_CACHE_TIME < _LOCATIONS_CACHE_TTL_SEC:
+            return _LOCATIONS_GEOJSON_CACHE
+
     locations = db.query(Location).all()
     features = []
 
@@ -45,10 +57,13 @@ def get_locations_geojson(db: Session) -> Dict[str, Any]:
             }
         })
 
-    return {
+    result = {
         "type": "FeatureCollection",
         "features": features
     }
+    _LOCATIONS_GEOJSON_CACHE = result
+    _LOCATIONS_GEOJSON_CACHE_TIME = now
+    return result
 
 def get_shelters_geojson(db: Session) -> Dict[str, Any]:
     shelters = db.query(Infrastructure).filter(Infrastructure.category == "Shelter").all()

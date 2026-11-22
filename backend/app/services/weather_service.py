@@ -1,5 +1,6 @@
 ﻿import requests
-from typing import Dict, Any, Optional
+import time
+from typing import Dict, Any, Optional, Tuple
 from datetime import datetime
 from ..config import settings
 from ..utils.logging import audit_logger
@@ -16,7 +17,20 @@ NER_WEATHER_FALLBACK = {
     "Tripura": {"temp": 29.0, "humidity": 76.0, "rain24": 25.0, "condition": "Humid & Partly Cloudy"}
 }
 
+# In-memory weather cache: key -> (timestamp, data_dict)
+_WEATHER_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+_WEATHER_CACHE_TTL_SEC = 1800.0  # 30-minute cache TTL
+
 def get_live_weather(lat: float, lon: float, state: str = "Assam") -> Dict[str, Any]:
+    cache_key = f"{round(lat, 2)}_{round(lon, 2)}"
+    now = time.time()
+
+    # Fast in-memory cache hit (< 0.001 ms)
+    if cache_key in _WEATHER_CACHE:
+        cached_time, cached_data = _WEATHER_CACHE[cache_key]
+        if now - cached_time < _WEATHER_CACHE_TTL_SEC:
+            return cached_data
+
     url = (
         f"https://api.open-meteo.com/v1/forecast"
         f"?latitude={lat}&longitude={lon}"
@@ -25,7 +39,7 @@ def get_live_weather(lat: float, lon: float, state: str = "Assam") -> Dict[str, 
     )
     
     try:
-        resp = requests.get(url, timeout=3.5)
+        resp = requests.get(url, timeout=2.0)
         if resp.status_code == 200:
             data = resp.json()
             curr = data.get("current", {})
@@ -45,7 +59,7 @@ def get_live_weather(lat: float, lon: float, state: str = "Assam") -> Dict[str, 
             else:
                 condition = "Overcast"
                 
-            return {
+            res = {
                 "temperature_c": float(curr.get("temperature_2m", 25.0)),
                 "humidity_pct": float(curr.get("relative_humidity_2m", 80.0)),
                 "rainfall_current_mm": float(curr.get("precipitation", 0.0)),
@@ -56,12 +70,14 @@ def get_live_weather(lat: float, lon: float, state: str = "Assam") -> Dict[str, 
                 "is_live_api": True,
                 "timestamp": datetime.utcnow().isoformat()
             }
+            _WEATHER_CACHE[cache_key] = (now, res)
+            return res
     except Exception as e:
         audit_logger.warning(f"Open-Meteo live API call failed or timed out: {e}. Using calibrated fallback.")
 
     # Fallback mode
     state_fallback = NER_WEATHER_FALLBACK.get(state, NER_WEATHER_FALLBACK["Assam"])
-    return {
+    fallback_res = {
         "temperature_c": state_fallback["temp"],
         "humidity_pct": state_fallback["humidity"],
         "rainfall_current_mm": round(state_fallback["rain24"] / 8.0, 1),
@@ -73,6 +89,8 @@ def get_live_weather(lat: float, lon: float, state: str = "Assam") -> Dict[str, 
         "source": "MDoNER Regional Environmental Baseline (Fallback)",
         "timestamp": datetime.utcnow().isoformat()
     }
+    _WEATHER_CACHE[cache_key] = (now, fallback_res)
+    return fallback_res
 class WeatherService:
     @staticmethod
     async def get_live_rainfall(lat: float, lon: float, state: str = "Assam") -> Dict[str, Any]:

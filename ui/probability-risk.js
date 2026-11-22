@@ -300,10 +300,18 @@ async function fetchLocationRisk(city) {
         if (res) {
             probabilityData.city = city;
             probabilityData.location = res.location ? (typeof res.location === "string" ? res.location : res.location.name) : `${city}, NER`;
-            probabilityData.overall = res.overall || (res.risk_score ? Math.round(res.risk_score) : 70);
-            probabilityData.landslide = res.landslide || probabilityData.overall;
-            probabilityData.flood = res.flood || Math.round(probabilityData.overall * 0.75);
-            probabilityData.level = res.level || "HIGH";
+            if (res.fusion && typeof res.fusion.fused_risk_score === 'number') {
+                probabilityData.overall = Math.round(res.fusion.fused_risk_score * 100);
+            } else if (res.overall !== undefined) {
+                probabilityData.overall = Math.round(res.overall);
+            } else if (res.risk_score !== undefined) {
+                probabilityData.overall = Math.round(res.risk_score);
+            } else {
+                probabilityData.overall = 70;
+            }
+            probabilityData.landslide = (res.landslide !== undefined) ? Math.round(res.landslide) : probabilityData.overall;
+            probabilityData.flood = (res.flood !== undefined) ? Math.round(res.flood) : Math.round(probabilityData.overall * 0.75);
+            probabilityData.level = (res.fusion && res.fusion.risk_tier) ? res.fusion.risk_tier : (res.level || getRiskLevel(probabilityData.overall).short);
 
             if (res.factors) {
                 probabilityData.factors.rainfall = res.factors.rainfall || 72;
