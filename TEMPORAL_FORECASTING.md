@@ -43,16 +43,16 @@ The Temporal Fusion Transformer (Lim et al., 2021) is engineered for multi-horiz
 
 ## 3. Benchmark Evaluation (TFT vs. Statistical Baselines)
 
-The TFT model was evaluated on a held-out test split under strict chronological separation (zero future leakage):
+The TFT model (`backend/models/tft/tft_metadata.json`, 97,704 parameters, best epoch 9) was evaluated on a held-out chronological test split (zero future leakage):
 
-| Target Variable | Horizon | Persistence Baseline (Naive) | Moving Average (24h) | **TFT (Our Model)** | TFT Error Reduction |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Soil Moisture (%)** | **1h** | $1.441\%$ MAE | $10.387\%$ MAE | **$1.088\%$ MAE** | **$24.5\%$ reduction** |
-| | **6h** | $7.732\%$ MAE | $13.365\%$ MAE | **$1.519\%$ MAE** | **$80.4\%$ reduction** |
-| | **24h** | $19.783\%$ MAE | $19.937\%$ MAE | **$2.191\%$ MAE** | **$88.9\%$ reduction** |
-| **Pore Water Pressure (kPa)** | **1h** | $1.072\,\text{kPa}$ MAE | $14.152\,\text{kPa}$ MAE | **$0.797\,\text{kPa}$ MAE** | **$25.6\%$ reduction** |
-| | **6h** | $6.499\,\text{kPa}$ MAE | $18.423\,\text{kPa}$ MAE | **$1.155\,\text{kPa}$ MAE** | **$82.2\%$ reduction** |
-| | **24h** | $25.612\,\text{kPa}$ MAE | $25.405\,\text{kPa}$ MAE | **$2.567\,\text{kPa}$ MAE** | **$90.0\%$ reduction** |
+| Target Variable | Horizon | TFT MAE | TFT RMSE | Persistence MAE | Persistence RMSE | 24h Moving Avg MAE | MAE Reduction vs. Persistence |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Soil Moisture (%)** | **1h** | **1.088** | **2.261** | 1.441 | 3.097 | 10.387 | **24.5%** |
+| | **6h** | **1.519** | **4.059** | 7.732 | 13.514 | 13.365 | **80.4%** |
+| | **24h** | **2.191** | **4.327** | 19.783 | 25.742 | 19.937 | **88.9%** |
+| **Pore Water Pressure (kPa)** | **1h** | **0.797** | **1.775** | 1.072 | 3.131 | 11.316 | **25.7%** |
+| | **6h** | **1.155** | **3.453** | 6.499 | 12.622 | 16.018 | **82.2%** |
+| | **24h** | **2.567** | **5.705** | 25.612 | 30.980 | 27.455 | **90.0%** |
 
 ---
 

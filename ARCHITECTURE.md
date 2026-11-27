@@ -59,6 +59,11 @@ flowchart TD
             F2["Deterministic Visual Feature Extractor"]
             F3["Transparent Uncalibrated Status Disclosure"]
         end
+
+        subgraph ADVISORY["Advisory Branch: Temporal Fusion Transformer (Isolated)"]
+            T1["PyTorch TFT (97.7k Params, CPU)"]
+            T2["1h / 6h / 24h Moisture & Pore Pressure Quantiles"]
+        end
     end
 
     subgraph FUSION["5. Multi-Modal Decision & Policy Layer"]
@@ -75,6 +80,7 @@ flowchart TD
     STREAM2 --> FUSION
     STREAM3 --> FUSION
     FUSION --> API
+    ADVISORY -.->|"Advisory Only (ENABLE_TFT_FUSION=False)"| API
 ```
 
 ---
@@ -106,11 +112,18 @@ flowchart TD
   $$\text{Fused Risk Score} = \sum_{m \in \{S, T, V\}} w_m \cdot x_m$$
   where weights are dynamically renormalized if temporal sensors or visual reports are absent for a station.
 - **Geospatial Localization Gate:** Citizen field images are only fused into a station if captured within $\le 15.0\text{ km}$ of the monitored station coordinates.
-- **Safety Overrides:** Deterministic life-safety rules that elevate the risk tier to `CRITICAL` regardless of low spatial or visual scores:
-  - Pore-water pressure $\ge 28.0\text{ kPa}$
-  - Ground vibration $\ge 0.5\text{ g}$ or ratio $\ge 3.0\times$ baseline
-  - Temporal risk index $\ge 80.0$
-  - Spatial model probability $\ge 0.90$
+- **Risk Tiers:** `< 0.35` (`LOW`), `0.35–0.549` (`MODERATE`), `0.55–0.749` (`HIGH`), `>= 0.75` (`CRITICAL`).
+- **Safety Overrides:** Deterministic life-safety rules that elevate the risk tier to `CRITICAL` (with an `0.80` minimum score floor) regardless of other stream scores:
+  - Pore-water pressure $\ge 25.0\text{ kPa}$
+  - Ground vibration $\ge 1.5\text{ g}$ or ratio $\ge 4.0\times$ baseline
+  - Temporal risk score $\ge 85.0$
+  - Spatial model probability $\ge 0.85$
+  - Localized `HIGH` visual evidence of `landslide_debris`
+
+### 3.5. Advisory Temporal Fusion Transformer (`tft_service.py`)
+- **Architecture:** Native PyTorch TFT (`97,704` parameters) trained offline on calibrated 1,200-hour multi-station sequences.
+- **Outputs:** Multi-quantile (`p10`, `p50`, `p90`) forecasts for soil moisture and pore-water pressure at `1h`, `6h`, and `24h` horizons via `/api/forecast/tft`.
+- **Isolation:** Strictly decoupled from `fusion_service.py` (`ENABLE_TFT_FUSION = False`); does not alter operational risk tiers or sirens. See [TEMPORAL_FORECASTING.md](TEMPORAL_FORECASTING.md).
 
 ---
 

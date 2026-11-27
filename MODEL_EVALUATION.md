@@ -24,18 +24,38 @@
 
 ## 2. Algorithm Benchmark Comparison
 
-The repository benchmarks six supervised learning algorithms across 20 input geotechnical, topographic, meteorological, and categorical dimensions (`backend/models/best_model_metadata.json`):
+The repository benchmarks six supervised learning algorithms across 20 input geotechnical, topographic, meteorological, and categorical dimensions (`backend/models/benchmark_results.csv` and `backend/models/best_model_metadata.json`):
 
-| Algorithm Architecture | Accuracy | Recall (Sensitivity) | Precision | F1-Score | ROC-AUC | Training Time (s) | Architectural Role |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **LightGBM Classifier** | **97.00%** | **98.04%** | **97.40%** | **0.9772** | **0.9961** | **0.22 s** | **Primary Active Model** |
-| **XGBoost Classifier** | **96.93%** | **97.82%** | **97.50%** | **0.9766** | **0.9961** | **0.65 s** | **Standby Ensemble / Failover** |
-| Random Forest (100 Trees) | 97.29% | 96.80% | 97.78% | 0.9729 | 0.9951 | 1.84 s | Offline Benchmark |
-| Gradient Boosting (GBDT) | 96.85% | 96.40% | 97.28% | 0.9684 | 0.9942 | 3.12 s | Offline Benchmark |
-| Decision Tree (Cart) | 94.71% | 94.40% | 95.00% | 0.9470 | 0.9471 | 0.08 s | Interpretable Baseline |
-| Logistic Regression (L2) | 87.43% | 86.20% | 88.32% | 0.8725 | 0.9421 | 0.15 s | Linear Baseline |
+| Algorithm Architecture | Accuracy | Recall (Sensitivity) | Precision | F1-Score | ROC-AUC | Composite Disaster Score | Training Time (s) | Architectural Role |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **LightGBM Classifier** | **97.00%** | **98.04%** | **97.40%** | **0.9772** | **0.9961** | **0.9871** | **0.22 s** | **Primary Active Model** |
+| Gradient Boosting (GBDT) | 96.93% | 98.26% | 97.09% | 0.9767 | 0.9936 | 0.9867 | 7.15 s | Offline Benchmark |
+| **XGBoost Classifier** | **96.93%** | **97.82%** | **97.50%** | **0.9766** | **0.9961** | **0.9862** | **0.65 s** | **Standby Ensemble / Failover** |
+| Logistic Regression (L2) | 96.86% | 97.82% | 97.39% | 0.9761 | 0.9955 | 0.9859 | 0.07 s | Linear Baseline |
+| Random Forest (150 Trees) | 95.00% | 95.20% | 97.11% | 0.9615 | 0.9918 | 0.9724 | 0.45 s | Offline Benchmark |
+| Decision Tree (CART) | 93.00% | 95.86% | 93.61% | 0.9472 | 0.9624 | 0.9593 | 0.09 s | Interpretable Baseline |
 
-*Note: All metrics above are authentic outputs from the model evaluation pipeline recorded in `backend/models/best_model_metadata.json` and benchmark logs on the 7,000 synthetic sample set. No cross-validation figures or unverified metrics have been fabricated.*
+**Model Selection Criterion:**  
+Models are ranked by a weighted **Composite Disaster Score** prioritizing missed-disaster avoidance (Recall) and ranking quality (ROC-AUC / PR-AUC):
+$$\text{Composite Disaster Score} = 0.35 \cdot \text{Recall} + 0.30 \cdot \text{ROC-AUC} + 0.20 \cdot \text{F1} + 0.15 \cdot \text{PR-AUC}$$
+
+*Note: All metrics above are authentic outputs from `ml_pipeline/training/train_models.py` recorded in `backend/models/benchmark_results.csv` on the 7,000-sample synthetic dataset (80/20 stratified split).*
+
+---
+
+## 2.1. Synthetic Dataset Generation Specification
+
+The 7,000-sample training dataset (`backend/data/ner_landslide_dataset.csv`) is generated programmatically in `ml_pipeline/training/train_models.py`:
+
+- **Regional Sampling:** Draws uniformly from 18 NER district profiles across all 8 states, each with `base_elev`, `tectonic` multiplier (`1.0–1.7`), and `monsoon` multiplier (`1.1–2.2`).
+- **Terrain & Proximity:** Slope angles follow $\text{Beta}(2.2, 3.2) \times 52 + 8$; road, fault, and stream distances follow exponential distributions; aspect is uniform $[0, 360)^\circ$.
+- **Monsoon (35%) vs. Non-Monsoon (65%) Regimes:**
+  - *Monsoon:* 24h rainfall $\sim \text{Gamma}(3.2, 32.0) \times m_{\text{factor}}$; soil moisture clipped to $[45, 98]\%$; pore pressure derived from soil moisture excess and clipped to $[2, 42]\text{ kPa}$.
+  - *Non-Monsoon:* 24h rainfall $\sim \text{Exp}(12.0) \times 0.4 m_{\text{factor}}$; soil moisture $\sim \mathcal{N}(32, 10)$ clipped to $[10, 58]\%$; pore pressure clipped to $[0.5, 12]\text{ kPa}$.
+- **Physics-Inspired Instability & Labeling:**
+  - Driving force combines $\sin(\text{slope})$, pore pressure, road-cut factor ($1.45$ if `distance_to_road_m < 40`), and $\sqrt{\text{tectonic}}$.
+  - Resisting force combines $\cos(\text{slope}) \tan(28^\circ)$, vegetation NDVI, and categorical vulnerability factors for lithology, soil type, and land use.
+  - Instability index $I = 0.38 \cdot (\text{driving} / (\text{resisting} + 0.05)) + 0.62 \cdot \text{rain\_trig}$ is mapped via $\sigma(4.2(I - 1.0)) + \mathcal{N}(0, 0.02)$ and labeled `1` when $\text{prob} \ge 0.50$.
 
 ---
 
@@ -70,7 +90,7 @@ The model ingests 20 features across 4 distinct physical and environmental domai
 - `rainfall_72h_mm`: Antecedent rainfall accumulation over 72 hours (proxy for slope pre-wetting).
 - `rainfall_intensity_mm_h`: Peak hourly precipitation intensity.
 
-### C. Topographical & Geomorphological (DEM Derived)
+### C. Topographical & Geomorphological (Estimated Baselines for 32 Stations)
 - `elevation_m`: Absolute altitude above mean sea level.
 - `slope_angle_deg`: Slope inclination (degrees).
 - `aspect_deg`: Slope azimuth orientation (0-360 degrees).
@@ -110,14 +130,16 @@ $$\text{Fused Risk Score} = w_{\text{spatial}} \cdot S_{\text{norm}} + w_{\text{
 - **Operational Weights:** $w_{\text{spatial}} = 0.50$, $w_{\text{temporal}} = 0.35$, $w_{\text{visual}} = 0.15$ (renormalized dynamically if evidence streams are absent).
 - **Temporal Dynamics (Phase 2):** Evaluates 1h, 6h, and 24h sliding windows for pore pressure rise rates, moisture acceleration, and vibration shock anomalies.
 - **Visual Evidence (Phase 3):** Deterministic image quality, edge density, and soil chroma analysis strictly labeled as `uncalibrated_unvalidated`.
-- **Deterministic Safety Overrides:** Trigger immediate tier elevation to `CRITICAL` whenever critical geotechnical boundaries are breached (e.g. pore pressure $\ge 28.0\text{ kPa}$, vibration $\ge 0.5\text{ g}$, or extreme temporal acceleration).
+- **Deterministic Safety Overrides:** Trigger immediate tier elevation to `CRITICAL` (with an `0.80` / `80%` minimum score floor) whenever critical geotechnical boundaries are breached (e.g. pore pressure $\ge 25.0\text{ kPa}$, vibration $\ge 1.5\text{ g}$ or $\ge 4.0\times$ baseline, temporal score $\ge 85.0$, spatial probability $\ge 0.85$, or high localized debris).
+- **Advisory Temporal Forecasting (TFT):** For multi-horizon soil moisture and pore-pressure forecasting (`1h`, `6h`, `24h`), see [TEMPORAL_FORECASTING.md](TEMPORAL_FORECASTING.md).
 
 ---
 
 ## 7. Academic Verification & Testing
 
-The machine learning and fusion pipeline is verified by automated regression test suites:
+The machine learning, forecasting, and fusion pipelines are verified by automated regression test suites (`71` total tests across `7` files):
 - `backend/tests/test_phase1_ml.py`: Validates model loading, dual-model failover, and TreeSHAP attribution extraction.
 - `backend/tests/test_temporal_service.py`: Validates sliding-window dynamics and threshold triggers.
 - `backend/tests/test_cv_service.py`: Validates visual quality gates and uncalibrated confidence disclosures.
 - `backend/tests/test_fusion_service.py`: Validates multi-modal mathematical weighting and safety override execution.
+- `backend/tests/test_tft_forecasting.py`: Validates TFT sequence preparation, multi-horizon forecasts, checkpoint loading, and fusion isolation.

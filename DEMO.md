@@ -62,7 +62,7 @@ Demonstrates in-situ piezometer pressure buildup behind a failure plane:
 ```powershell
 .\venv\Scripts\python.exe sensor_simulator/sensor_simulator.py --scenario pore_pressure --station SN-ML-001 --iterations 3
 ```
-*Expected Behavior:* Pore pressure rises above 29.5 kPa.
+*Expected Behavior:* Pore pressure rises above 29.5 kPa (exceeding the 25.0 kPa safety override threshold).
 
 ### Scenario 5: Dynamic Vibration Shock Anomaly
 Demonstrates micro-seismic slope movement or heavy machinery disturbance:
@@ -109,6 +109,13 @@ On `http://127.0.0.1:8000/ui/probability-risk.html`:
 - Displays Stream 1 (Spatial ML + SHAP), Stream 2 (Temporal Dynamics), and Stream 3 (Visual Evidence).
 - Shows dynamic operational weights (`w = 0.50`, `w = 0.35`, `w = 0.15`) and data sufficiency.
 
+### 3.4. Temporal Fusion Transformer (TFT) Advisory Forecasting
+Navigate to `http://127.0.0.1:8000/ui/probability-risk.html#tftSection` or run:
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/forecast/tft?station_id=SN-AS-001&horizon=24h" -Method GET
+```
+Inspect `summary_horizons` (`1h`, `6h`, `24h`) and `forecast_trajectory` (`p10`, `p50`, `p90` quantiles for soil moisture and pore pressure). Note `is_simulation_model: true` and `advisory_mode: true`.
+
 ---
 
 ## 4. Verifying Security & Integrity Hardening
@@ -139,4 +146,4 @@ Run the complete automated pytest suite:
 ```powershell
 .\venv\Scripts\python.exe -m pytest backend/tests/ -v
 ```
-All tests across Phases 1, 2, 3, 4, 5, and the core API pass synchronously.
+All 71 tests across all 7 test suites (`test_api.py`, `test_phase1_ml.py`, `test_temporal_service.py`, `test_cv_service.py`, `test_fusion_service.py`, `test_phase5_academic.py`, `test_tft_forecasting.py`) pass synchronously.
